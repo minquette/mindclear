@@ -508,7 +508,13 @@ export default function App(){
               <span style={{fontSize:14,fontWeight:600,color:form.urgent?"#e06060":"#4a9e6a"}}>{form.urgent?"🔴 Urgent":"Mark as urgent"}</span>
             </label>
             <div style={S.fieldLabel}>Due date</div>
-            <input type="date" style={S.input} value={form.dueDate} onChange={e=>setForm(f=>({...f,dueDate:e.target.value}))}/>
+            <div style={{width:"100%",overflow:"hidden"}}>
+              <input type="date" style={{...S.input,appearance:"none",WebkitAppearance:"none"}} value={form.dueDate} onChange={e=>setForm(f=>({...f,dueDate:e.target.value}))}/>
+            </div>
+            {form.dueDate&&(
+              <button style={{...S.deferBtn,marginBottom:10,fontSize:13}} onClick={()=>setForm(f=>({...f,dueDate:""}))}
+              >✕ Clear date</button>
+            )}
             <div style={S.fieldLabel}>Or specific days of the week</div>
             <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
               {DAYS_SHORT.map(d=>(
@@ -523,7 +529,13 @@ export default function App(){
               {RECURRENCE.map(r=><button key={r} style={{...S.recBtn,...(form.recurrence===r?S.recActive:{})}} onClick={()=>setForm(f=>({...f,recurrence:r}))}>{r}</button>)}
             </div>
             <div style={S.fieldLabel}>Reminder</div>
-            <input type="datetime-local" style={S.input} value={form.reminder} onChange={e=>setForm(f=>({...f,reminder:e.target.value}))}/>
+            <div style={{width:"100%",overflow:"hidden"}}>
+              <input type="datetime-local" style={{...S.input,appearance:"none",WebkitAppearance:"none"}} value={form.reminder} onChange={e=>setForm(f=>({...f,reminder:e.target.value}))}/>
+            </div>
+            {form.reminder&&(
+              <button style={{...S.deferBtn,marginBottom:10,fontSize:13}} onClick={()=>setForm(f=>({...f,reminder:""}))}
+              >✕ Clear reminder</button>
+            )}
             <div style={S.fieldLabel}>Tags</div>
             <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
               {PRESET_TAGS.map(tag=>(
