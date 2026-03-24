@@ -518,7 +518,7 @@ export default function App(){
           <div style={{fontSize:13,color:"#6a6a7a",marginBottom:16,fontStyle:"italic"}}>Your recurring tasks this month</div>
           {tasks.filter(t=>t.recurrence!=="None"&&!t.done&&t.showStickerChart&&(!filterTag||t.tags.includes(filterTag))).length===0 && (
             <div style={{textAlign:"center",padding:40,color:"#5a5a6a",fontSize:15,fontStyle:"italic"}}>
-              {filterTag ? `No tracked habits tagged "${filterTag}".` : "No habit charts yet. Edit a recurring task and turn on "Track this habit" to add one."}
+              {filterTag ? `No tracked habits tagged "${filterTag}".` : `No habit charts yet. Edit a recurring task and turn on “Track this habit” to add one.`}
             </div>
           )}
           {tasks.filter(t=>t.recurrence!=="None"&&!t.done&&t.showStickerChart&&(!filterTag||t.tags.includes(filterTag))).map(t=>(
