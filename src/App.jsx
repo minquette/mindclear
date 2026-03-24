@@ -63,7 +63,7 @@ const BADGES = [
 
 const defaultTask = () => ({
   id:`t_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
-  title:"",notes:"",urgent:false,dueDate:"",dueDay:"",recurrence:"None",
+  title:"",notes:"",urgent:false,dueDate:"",dueDay:"",dueDays:[],recurrence:"None",
   tags:[],reminder:"",done:false,createdAt:new Date().toISOString(),
 });
 const defaultStats = () => ({
@@ -77,12 +77,18 @@ function useLS(key,init){
   return[v,setV];
 }
 
-const todayISO=()=>new Date().toISOString().split("T")[0];
+const todayISO=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;};
 const todayDayName=()=>DAYS_SHORT[new Date().getDay()===0?6:new Date().getDay()-1];
+const localISO=d=>{
+  const yr=d.getFullYear();
+  const mo=String(d.getMonth()+1).padStart(2,"0");
+  const dy=String(d.getDate()).padStart(2,"0");
+  return`${yr}-${mo}-${dy}`;
+};
 const weekDates=()=>{
   const today=new Date();today.setHours(0,0,0,0);
   const dow=today.getDay()===0?6:today.getDay()-1;
-  return Array.from({length:7},(_,i)=>{const d=new Date(today);d.setDate(d.getDate()-dow+i);return d.toISOString().split("T")[0];});
+  return Array.from({length:7},(_,i)=>{const d=new Date(today);d.setDate(d.getDate()-dow+i);return localISO(d);});
 };
 
 function Cottage({owned}){
@@ -311,9 +317,9 @@ export default function App(){
 
   const isTaskToday=t=>
     t.dueDate===today||
-    (!t.dueDate&&t.dueDay===todayDay)||
+    (!t.dueDate&&(t.dueDay===todayDay||(t.dueDays||[]).includes(todayDay)))||
     t.recurrence==="Daily"||
-    (t.recurrence==="Weekly"&&t.dueDay===todayDay);
+    (t.recurrence==="Weekly"&&(t.dueDay===todayDay||(t.dueDays||[]).includes(todayDay)));
 
   const activeTasks=tasks.filter(t=>!t.done);
   const listSource=view==="done"?tasks.filter(t=>t.done):view==="today"?activeTasks.filter(isTaskToday):activeTasks;
@@ -332,11 +338,12 @@ export default function App(){
         @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@400;600;700&display=swap');
         @keyframes fadeup{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
         *{box-sizing:border-box;margin:0;padding:0;}
+        html,body{overflow-x:hidden;max-width:100vw;}
         body{background:#2C2C2C;}
-        input,select,textarea,button{font-family:'Nunito',sans-serif;}
-        ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:#4a4a5a;border-radius:4px}
-        input[type=date],input[type=datetime-local]{color-scheme:dark;}
+        input,select,textarea,button{font-family:'Nunito',sans-serif;font-size:16px;}
+        input[type=date],input[type=datetime-local]{color-scheme:dark;font-size:16px;}
         ::placeholder{color:#5a5a6a;}
+        ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:#4a4a5a;border-radius:4px}
       `}</style>
 
       <div style={S.header}>
@@ -430,39 +437,43 @@ export default function App(){
           <div style={S.weekTitle}>This Week</div>
           <div style={S.weekSub}>Drag to reschedule · ✕ to let go (+8pts)</div>
           <div style={S.weekGrid}>
-            {wDates.map((date,i)=>{
-              const dayLabel=DAYS_SHORT[i];
-              const isToday=date===today;
-              const dayTasks=activeTasks.filter(t=>
-                t.dueDate===date||(!t.dueDate&&t.dueDay===dayLabel)||t.recurrence==="Daily"||(t.recurrence==="Weekly"&&t.dueDay===dayLabel)
-              );
-              const load=dayTasks.length;
-              const bg=dragOver===date?"#2a3a3a":load===0?"#222222":load<=2?"#2C2C2C":load<=4?"#2a2a1a":"#2a1a1a";
-              const border=isToday?"#A8DADC":load>=5?"#FFC1CC66":load>=3?"#B39CD066":"#3e3e3e";
-              return(
-                <div key={date} style={{...S.dayCol,background:bg,border:`2px solid ${border}`}}
-                  onDragOver={e=>onDragOver(e,date)} onDrop={e=>onDrop(e,date)} onDragLeave={()=>setDragOver(null)}>
-                  <div style={{...S.dayLabel,...(isToday?{color:"#A8DADC"}:{})}}>
-                    {dayLabel}
-                    <span style={S.dayDate}>{fmtDate(date)}</span>
-                  </div>
-                  <div style={{...S.dayLoad,color:load>=5?"#e07a7a":load>=3?"#c8b840":"#2a7a4a"}}>
-                    {load===0?"Free":load===1?"1":load}
-                  </div>
-                  {dayTasks.map(t=>(
-                    <div key={t.id} draggable
-                      style={{...S.weekChip,...(t.urgent?{borderLeft:"2px solid #c04040"}:{})}}
-                      onDragStart={e=>onDragStart(e,t.id)}>
-                      <span style={{flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                        {t.title.length>15?t.title.slice(0,15)+"…":t.title}
-                      </span>
-                      <button style={S.weekX} onClick={()=>letGoTask(t.id)}>✕</button>
+            {[[0,1],[2,3],[4,5],[6]].map((group,gi)=>(
+              <div key={gi} style={{...S.weekRow,gridTemplateColumns:group.length===1?"1fr":`repeat(${group.length},1fr)`}}>
+                {group.map(i=>{
+                  const date=wDates[i];
+                  const dayLabel=DAYS_SHORT[i];
+                  const isToday=date===today;
+                  const dayTasks=activeTasks.filter(t=>
+                    t.dueDate===date||(!t.dueDate&&t.dueDay===dayLabel)||t.recurrence==="Daily"||(t.recurrence==="Weekly"&&(t.dueDays||[t.dueDay]).includes(dayLabel))
+                  );
+                  const load=dayTasks.length;
+                  const bg=dragOver===date?"#2a3a3a":load===0?"#222222":load<=2?"#2C2C2C":load<=4?"#2a2a1a":"#2a1a1a";
+                  const border=isToday?"#A8DADC":load>=5?"#FFC1CC66":load>=3?"#B39CD066":"#3e3e3e";
+                  return(
+                    <div key={date} style={{...S.dayCol,background:bg,border:`2px solid ${border}`}}
+                      onDragOver={e=>onDragOver(e,date)} onDrop={e=>onDrop(e,date)} onDragLeave={()=>setDragOver(null)}>
+                      <div style={{...S.dayLabel,...(isToday?{color:"#A8DADC"}:{})}}>
+                        {dayLabel} <span style={S.dayDate}>{fmtDate(date)}</span>
+                      </div>
+                      <div style={{...S.dayLoad,color:load>=5?"#e07a7a":load>=3?"#c8b840":"#4a8a9a"}}>
+                        {load===0?"Free ✨":load===1?"1 task":`${load} tasks`}
+                      </div>
+                      {dayTasks.map(t=>(
+                        <div key={t.id} draggable
+                          style={{...S.weekChip,...(t.urgent?{borderLeft:"2px solid #FFC1CC"}:{})}}
+                          onDragStart={e=>onDragStart(e,t.id)}>
+                          <span style={{flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                            {t.title.length>18?t.title.slice(0,18)+"…":t.title}
+                          </span>
+                          <button style={S.weekX} onClick={()=>letGoTask(t.id)}>✕</button>
+                        </div>
+                      ))}
+                      <div style={S.freeTime}>{load>=5?"⚠️ Full":load>=3?"🟡 Busy":""}</div>
                     </div>
-                  ))}
-                  <div style={S.freeTime}>{load>=5?"⚠️":load>=3?"🟡":load>=1?"🟢":""}</div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -496,14 +507,16 @@ export default function App(){
               <input type="checkbox" checked={form.urgent} onChange={e=>setForm(f=>({...f,urgent:e.target.checked}))}/>
               <span style={{fontSize:14,fontWeight:600,color:form.urgent?"#e06060":"#4a9e6a"}}>{form.urgent?"🔴 Urgent":"Mark as urgent"}</span>
             </label>
-            <div style={{display:"flex",gap:10}}>
-              <div style={{flex:1}}><div style={S.fieldLabel}>Due Date</div>
-                <input type="date" style={S.input} value={form.dueDate} onChange={e=>setForm(f=>({...f,dueDate:e.target.value}))}/></div>
-              <div style={{flex:1}}><div style={S.fieldLabel}>Or Day of Week</div>
-                <select style={S.input} value={form.dueDay} onChange={e=>setForm(f=>({...f,dueDay:e.target.value}))}>
-                  <option value="">— any day —</option>
-                  {DAYS_SHORT.map(d=><option key={d}>{d}</option>)}
-                </select></div>
+            <div style={S.fieldLabel}>Due Date</div>
+            <input type="date" style={S.input} value={form.dueDate} onChange={e=>setForm(f=>({...f,dueDate:e.target.value}))}/>
+            <div style={S.fieldLabel}>Or Specific Days of the Week</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
+              {DAYS_SHORT.map(d=>(
+                <button key={d} onClick={()=>setForm(f=>({...f,dueDays:(f.dueDays||[]).includes(d)?(f.dueDays||[]).filter(x=>x!==d):[...(f.dueDays||[]),d],dueDay:(f.dueDays||[]).includes(d)?(f.dueDays||[]).filter(x=>x!==d).join(","):[...(f.dueDays||[]),d].join(",")}))}
+                  style={{...S.recBtn,...((form.dueDays||[]).includes(d)?S.recActive:{}),minWidth:44,textAlign:"center"}}>
+                  {d}
+                </button>
+              ))}
             </div>
             <div style={S.fieldLabel}>Repeats</div>
             <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
@@ -597,7 +610,7 @@ function TaskCard({task,onToggle,onLetGo,onDefer,onToggleUrgent,onEdit,today}){
           </div>
           <div style={S.cardMeta}>
             {task.dueDate&&<span style={{...S.metaChip,...(isOverdue?S.metaOverdue:{})}}>{isOverdue?"⚠️ ":""}{fmtDate(task.dueDate)}</span>}
-            {task.dueDay&&!task.dueDate&&<span style={S.metaChip}>{task.dueDay}s</span>}
+            {(task.dueDays?.length>0?task.dueDays:[task.dueDay].filter(Boolean))&&!task.dueDate&&(task.dueDays?.length>0?task.dueDays:[task.dueDay].filter(Boolean)).length>0&&<span style={S.metaChip}>{(task.dueDays?.length>0?task.dueDays:[task.dueDay].filter(Boolean)).join(', ')}</span>}
             {task.reminder&&<span style={S.metaChip}>⏰ {fmtDateTime(task.reminder)}</span>}
             {task.tags.map(tag=>(
               <span key={tag} style={{...S.metaTag,color:getTagColor(tag),background:getTagColor(tag)+"22",border:`1px solid ${getTagColor(tag)}44`}}>{tag}</span>
@@ -671,7 +684,8 @@ const S={
   weekView:   {padding:"10px 8px"},
   weekTitle:  {fontFamily:"'Lora',serif",fontSize:18,fontWeight:700,color:"#A8DADC",marginBottom:2},
   weekSub:    {fontSize:10,color:"#6a6a7a",fontStyle:"italic",marginBottom:8},
-  weekGrid:   {display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3},
+  weekGrid:   {display:"flex",flexDirection:"column",gap:6},
+  weekRow:    {display:"grid",gap:6},
   dayCol:     {borderRadius:8,padding:"5px 3px",minHeight:130,transition:"background 0.2s"},
   dayLabel:   {fontSize:10,fontWeight:700,color:"#8a8a9a",textAlign:"center",marginBottom:1},
   dayDate:    {display:"block",fontSize:9,color:"#5a5a6a",fontWeight:400},
