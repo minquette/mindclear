@@ -381,6 +381,157 @@ function Confetti({ active, onDone }) {
   );
 }
 
+
+// ── Onboarding slides ─────────────────────────────────────────────────────
+const ONBOARDING_SLIDES = [
+  {
+    emoji:"🧠",
+    title:"Your mind, emptied",
+    body:"MindClear is built around one idea: get everything out of your head and onto the screen. Not organise. Not prioritise. Just empty.",
+    color:"#A8DADC",
+  },
+  {
+    emoji:"🤲",
+    title:"Letting go is the goal",
+    body:"Most apps reward you for doing more. MindClear rewards you for doing less. Deleting a task earns 8 points. Deferring earns 5. Completing earns 1. That's intentional.",
+    color:"#FFC1CC",
+  },
+  {
+    emoji:"🏡",
+    title:"Earn your cosy cottage",
+    body:"Spend your breathing points decorating a little cottage — chimney smoke, a window cat, an apple tree. It grows as you relax your grip on your list.",
+    color:"#B39CD0",
+  },
+  {
+    emoji:"📋",
+    title:"Tasks, your way",
+    body:"Set priorities, due dates, recurring schedules, time estimates, and tags. Or just brain dump everything in one go and sort it later — or never.",
+    color:"#A8DADC",
+  },
+  {
+    emoji:"🌤️",
+    title:"You're ready",
+    body:"Start with a brain dump. Get it all out. Then breathe. The list will still be there tomorrow — but it won't be in your head anymore.",
+    color:"#FFC1CC",
+  },
+];
+
+function Onboarding({ onDone }) {
+  const [slide, setSlide] = useState(0);
+  const current = ONBOARDING_SLIDES[slide];
+  const isLast = slide === ONBOARDING_SLIDES.length - 1;
+  return (
+    <div style={{position:"fixed",inset:0,background:"#1a1a2a",zIndex:2000,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center"}}>
+      <div style={{fontSize:72,marginBottom:24,lineHeight:1}}>{current.emoji}</div>
+      <div style={{fontSize:24,fontWeight:700,color:current.color,marginBottom:16,fontFamily:"-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif",lineHeight:1.2}}>
+        {current.title}
+      </div>
+      <div style={{fontSize:16,color:"#a0a0b8",lineHeight:1.7,marginBottom:40,maxWidth:340}}>
+        {current.body}
+      </div>
+      {/* Dots */}
+      <div style={{display:"flex",gap:8,marginBottom:32}}>
+        {ONBOARDING_SLIDES.map((_,i)=>(
+          <div key={i} style={{width:i===slide?20:8,height:8,borderRadius:4,background:i===slide?current.color:"#3a3a4a",transition:"width 0.3s ease"}}/>
+        ))}
+      </div>
+      <button
+        style={{background:current.color,color:"#1a1a2a",border:"none",borderRadius:20,padding:"14px 36px",fontSize:16,fontWeight:700,cursor:"pointer",width:"100%",maxWidth:300}}
+        onClick={()=>isLast?onDone():setSlide(s=>s+1)}>
+        {isLast?"Let's go →":"Next"}
+      </button>
+      {!isLast&&(
+        <button style={{background:"none",border:"none",color:"#5a5a7a",fontSize:14,cursor:"pointer",marginTop:16,padding:"8px 16px"}} onClick={onDone}>
+          Skip
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Help guide ─────────────────────────────────────────────────────────────
+const HELP_SECTIONS = [
+  {
+    title:"🧠 The brain dump philosophy",
+    content:[
+      "MindClear is built on one insight: your brain is terrible at storing to-do lists but brilliant at solving problems. Every time you try to remember a task, you waste mental energy that could go elsewhere.",
+      "The brain dump is the heart of the app. Every morning, open it and empty your mind — one thought per line, no order, no priority. Just get it out. You earn 10 points just for doing this.",
+      "Why does letting go earn more than completing? Because recognising that something doesn't need to be done is harder, and more valuable, than just doing it. Deleting a task earns 8 points. Deferring earns 5. Completing earns 1.",
+      "The goal isn't an empty list. It's an empty mind.",
+    ],
+  },
+  {
+    title:"🏡 Points and the cottage",
+    content:[
+      "Every positive action earns breathing points: brain dumping (10pts), letting go of a task (8pts), deferring mindfully (5pts), completing a task (1pt).",
+      "Spend your points in the decoration shop to add things to your cosy cottage — chimney smoke, a window cat, an apple tree, eventually a moon and stars or an aurora borealis.",
+      "The cottage changes with the time of day. Open it at night and the sky is dark with stars. At dusk you'll see a warm orange tint. It's a small thing, but it's yours.",
+      "Badges are earned for milestones — your first brain dump, letting go of 10 tasks, a 7-day ritual streak. Check them in the Home tab.",
+    ],
+  },
+  {
+    title:"↻ Recurring tasks and habit charts",
+    content:[
+      "Set any task to repeat — daily, weekly, fortnightly, or monthly. Recurring tasks work differently to regular ones: ticking them off marks them done for today, but they reappear tomorrow.",
+      "You can also set tasks to recur on specific days of the week — for example, gym on Tuesday and Friday. Tap multiple days when creating or editing the task.",
+      "Turn on 'Track this habit' for any recurring task and choose a sticker emoji. That task will appear in the 📊 Habits tab as a monthly calendar — every day you complete it gets your sticker.",
+      "The Habits tab can be filtered by tag, so you can view just your work habits, health habits, and so on separately.",
+    ],
+  },
+  {
+    title:"🌤 Priority and someday",
+    content:[
+      "Every task can have a priority — High, Medium, Low, or None. High priority tasks show a pink left border on the card. The All tasks view sorts by priority by default.",
+      "High priority automatically marks a task as urgent too, which surfaces it in the Today view.",
+      "The Someday bucket is for things you want to keep but don't want to act on yet. Mark a task as Someday and it disappears from Today and All tasks — no pressure, but not forgotten. Find them in the 🌤 Someday tab.",
+      "Use Someday for things like 'learn Spanish' or 'repaint the bedroom' — intentions, not commitments.",
+    ],
+  },
+  {
+    title:"👆 Swipe gestures",
+    content:[
+      "Every task card supports swipe gestures on mobile. Swipe left a little (about halfway) to open the defer panel — choose Tomorrow or Next week to push it forward and earn 5 points.",
+      "Swipe left all the way to let the task go entirely — it's deleted and you earn 8 points.",
+      "You'll see a pink 'let go' panel and a teal 'defer' panel peek out from behind the card as you swipe, so you always know what's coming.",
+      "The action buttons (✏️ 🔴 📅 🤲 🌤) are still there if you prefer tapping. Swipe is just a faster option once you're used to it.",
+    ],
+  },
+];
+
+function HelpGuide({ onClose }) {
+  const [open, setOpen] = useState(null);
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",zIndex:500,display:"flex",alignItems:"flex-end",justifyContent:"center"}}
+      onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{background:"#2C2C2C",borderRadius:"18px 18px 0 0",width:"100%",maxWidth:720,maxHeight:"88vh",overflowY:"auto",border:"1px solid #3e3e3e",borderBottom:"none"}}>
+        <div style={{position:"sticky",top:0,background:"#2C2C2C",padding:"18px 20px 12px",borderBottom:"1px solid #3e3e3e",display:"flex",justifyContent:"space-between",alignItems:"center",zIndex:10}}>
+          <span style={{fontSize:18,fontWeight:700,color:"#A8DADC",fontFamily:"-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif"}}>Help guide</span>
+          <button style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"#5a5a6a"}} onClick={onClose}>✕</button>
+        </div>
+        <div style={{padding:"12px 20px 40px"}}>
+          {HELP_SECTIONS.map((section,i)=>(
+            <div key={i} style={{marginBottom:8,border:"1px solid #3e3e3e",borderRadius:12,overflow:"hidden"}}>
+              <button
+                style={{width:"100%",background:open===i?"#2a3a3a":"#222222",border:"none",padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer",textAlign:"left"}}
+                onClick={()=>setOpen(open===i?null:i)}>
+                <span style={{fontSize:15,fontWeight:700,color:"#E4E4E4"}}>{section.title}</span>
+                <span style={{color:"#5a5a6a",fontSize:18,transition:"transform 0.2s",transform:open===i?"rotate(180deg)":"none"}}>⌄</span>
+              </button>
+              {open===i&&(
+                <div style={{padding:"12px 16px 16px",background:"#1e1e1e"}}>
+                  {section.content.map((para,j)=>(
+                    <p key={j} style={{fontSize:14,color:"#a0a0b0",lineHeight:1.7,marginBottom:j<section.content.length-1?12:0}}>{para}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App(){
   const[tasks,setTasks]=useLS("mc_tasks_v3",[]);
   const[stats,setStats]=useLS("mc_stats_v3",defaultStats());
@@ -399,6 +550,8 @@ export default function App(){
   const[dateSuggestion,setDateSuggestion]=useState(null);
   const[confetti,setConfetti]=useState(false);
   const[listening,setListening]=useState(false);
+  const[showHelp,setShowHelp]=useState(false);
+  const[showOnboarding,setShowOnboarding]=useLS("mc_onboarded",true);
   const titleRef=useRef();
 
   const showToast=useCallback(msg=>setToast(msg),[]);
@@ -585,8 +738,11 @@ export default function App(){
             <div style={S.tagline}>Breathe out. Let it go.</div>
           </div>
           <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
-            <div style={S.pointsChip} onClick={()=>setShowShop(true)}>🌿 {stats.points} pts</div>
-            <button style={S.addBtn} onClick={openNew}>+ Task</button>
+            <div style={{display:"flex",gap:8,alignItems:"center"}}>
+              <div style={S.pointsChip} onClick={()=>setShowShop(true)}>🌿 {stats.points} pts</div>
+              <button style={{...S.addBtn,padding:"8px 12px"}} onClick={()=>setShowHelp(true)} title="Help">?</button>
+              <button style={S.addBtn} onClick={openNew}>+ Task</button>
+            </div>
           </div>
         </div>
         <div style={S.nav}>
@@ -655,6 +811,12 @@ export default function App(){
           <div style={{fontSize:40,marginBottom:8}}>🧠</div>
           <h2 style={S.brainTitle}>Morning brain dump</h2>
           <p style={S.brainSub}>Don't organise. Don't prioritise. Just empty your mind — one thought per line.<br/>You'll earn <strong style={{color:"#A8DADC"}}>10 points</strong> just for showing up.</p>
+          {stats.totalDumps===0&&(
+            <div style={{background:"#1a2a3a",border:"1px solid #A8DADC44",borderRadius:12,padding:"14px 16px",marginBottom:16}}>
+              <div style={{fontSize:15,fontWeight:700,color:"#A8DADC",marginBottom:6}}>👋 Welcome to your first brain dump</div>
+              <div style={{fontSize:14,color:"#6a8a9a",lineHeight:1.6}}>Type everything on your mind below — one thought per line. Don't sort, don't judge. Just empty. You'll earn 10 points just for doing this.</div>
+            </div>
+          )}
           <textarea style={S.brainArea} rows={10} value={brainText}
             placeholder={"Call Emma's school\nPay the electricity bill\nEmail Sarah re: meeting\nBook Mum's GP appointment\nGet milk\nFix the dripping tap..."}
             onChange={e=>setBrainText(e.target.value)}/>
@@ -916,6 +1078,8 @@ export default function App(){
 
       {toast&&<Toast msg={toast} onDone={()=>setToast("")}/>}
       <Confetti active={confetti} onDone={()=>setConfetti(false)}/>
+      {showOnboarding&&<Onboarding onDone={()=>setShowOnboarding(false)}/>}
+      {showHelp&&<HelpGuide onClose={()=>setShowHelp(false)}/>}
       <div style={{height:40}}/>
     </div>
   );
