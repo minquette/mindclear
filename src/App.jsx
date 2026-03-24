@@ -4,6 +4,16 @@ import * as chrono from "chrono-node";
 const PRESET_TAGS = ["Work","Home","Personal","Health","Finance","Shopping","Errands","Social","Urgent"];
 const DAYS_SHORT = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const RECURRENCE = ["None","Daily","Weekly","Fortnightly","Monthly"];
+const PRIORITY_LEVELS = [
+  { id:"high",   label:"High",   color:"#FFC1CC", bg:"#3a2028" },
+  { id:"medium", label:"Medium", color:"#B39CD0", bg:"#2a2038" },
+  { id:"low",    label:"Low",    color:"#A8DADC", bg:"#1a2a30" },
+  { id:"none",   label:"None",   color:"#5a5a6a", bg:"transparent" },
+];
+const getPriority = p => PRIORITY_LEVELS.find(x=>x.id===p) || PRIORITY_LEVELS[3];
+
+const TIME_ESTIMATES = ["5 min","15 min","30 min","1 hr","2 hr","3+ hr"];
+
 const STICKER_EMOJIS = ["⭐","🌟","✅","💜","🌸","🔥","🏆","🌈","💎","🦋","🌻","❤️","🍀","🎯","🧘","💪","🐝","🌙"];
 const TAG_COLORS = {
   Work:"#4a9e6a",Home:"#d4813a",Personal:"#9b6fce",Health:"#c05a5a",
@@ -65,8 +75,8 @@ const BADGES = [
 
 const defaultTask = () => ({
   id:`t_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
-  title:"",notes:"",urgent:false,dueDate:"",dueDay:"",dueDays:[],recurrence:"None",
-  tags:[],reminder:"",done:false,completedDates:[],stickerEmoji:"⭐",showStickerChart:false,createdAt:new Date().toISOString(),
+  title:"",notes:"",urgent:false,priority:"none",timeEstimate:"",dueDate:"",dueDay:"",dueDays:[],recurrence:"None",
+  tags:[],reminder:"",done:false,someday:false,completedDates:[],stickerEmoji:"⭐",showStickerChart:false,createdAt:new Date().toISOString(),
 });
 const defaultStats = () => ({
   points:0,totalPoints:0,totalLetGo:0,totalDumps:0,totalDeferred:0,
@@ -191,15 +201,17 @@ function StickerChart({ task, compact=false }) {
   );
 }
 
-function Cottage({owned}){
+function Cottage({owned, hour=12}){
   const has=id=>owned.includes(id);
-  const night=has("moon")||has("aurora");
+  const isNight = hour<6||hour>=20;
+  const isDusk  = (hour>=18&&hour<20)||(hour>=6&&hour<8);
+  const night=isNight||(has("moon")||has("aurora"));
   return(
     <svg viewBox="0 0 300 210" style={{width:"100%",maxWidth:340,filter:"drop-shadow(0 8px 32px rgba(0,0,0,0.5))"}}>
       <defs>
         <linearGradient id="csky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={night?"#0a0e2a":has("rainbow")?"#1a4a6a":"#0d2a1a"}/>
-          <stop offset="100%" stopColor={night?"#1a2040":"#1a4a2a"}/>
+          <stop offset="0%" stopColor={isNight?"#0a0e2a":isDusk?"#2a1a3a":has("rainbow")?"#1a4a6a":"#0d2a1a"}/>
+          <stop offset="100%" stopColor={isNight?"#1a2040":isDusk?"#3a2030":"#1a4a2a"}/>
         </linearGradient>
         <linearGradient id="cgrass" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#1a5a1a"/><stop offset="100%" stopColor="#0d3a0d"/>
@@ -217,13 +229,14 @@ function Cottage({owned}){
         )}
       </defs>
       <rect width="300" height="210" fill="url(#csky)" rx="14"/>
+      {isDusk&&<rect width="300" height="210" fill="#ff660022" rx="14"/>}
       {has("aurora")&&<>
         <ellipse cx="150" cy="40" rx="140" ry="28" fill="url(#aurag)" opacity="0.7">
           <animate attributeName="ry" values="26;38;26" dur="6s" repeatCount="indefinite"/>
           <animate attributeName="opacity" values="0.7;0.3;0.7" dur="4s" repeatCount="indefinite"/>
         </ellipse>
       </>}
-      {has("moon")&&<>
+      {(has("moon")||isNight)&&<>
         <circle cx="240" cy="32" r="20" fill="#fffbe6" opacity="0.95"/>
         <circle cx="253" cy="24" r="13" fill="#0a0e2a" opacity="0.95"/>
         {[40,80,130,170,210,260,20].map((x,i)=><circle key={i} cx={x} cy={[18,10,22,8,16,28,32][i]} r="1.5" fill="#fff" opacity="0.6"/>)}
@@ -325,6 +338,49 @@ function Toast({msg,onDone}){
   );
 }
 
+
+// ── Confetti ──────────────────────────────────────────────────────────────
+function Confetti({ active, onDone }) {
+  useEffect(() => {
+    if (!active) return;
+    const t = setTimeout(onDone, 1200);
+    return () => clearTimeout(t);
+  }, [active, onDone]);
+  if (!active) return null;
+  const pieces = Array.from({length:22}, (_,i) => ({
+    id:i,
+    color:["#FFC1CC","#B39CD0","#A8DADC","#E4E4E4","#ffd6e0","#c8b8f0","#b8e8ec"][i%7],
+    x: Math.random()*100,
+    size: 6 + Math.random()*8,
+    delay: Math.random()*0.4,
+    rotation: Math.random()*360,
+    shape: i%3===0?"circle":i%3===1?"rect":"triangle",
+  }));
+  return (
+    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"}}>
+      {pieces.map(p=>(
+        <div key={p.id} style={{
+          position:"absolute", top:"-10px", left:`${p.x}%`,
+          width:p.shape==="circle"?p.size:p.size, height:p.shape==="triangle"?0:p.size,
+          background:p.shape==="triangle"?"transparent":p.color,
+          borderRadius:p.shape==="circle"?"50%":"2px",
+          borderLeft:p.shape==="triangle"?`${p.size/2}px solid transparent`:"none",
+          borderRight:p.shape==="triangle"?`${p.size/2}px solid transparent`:"none",
+          borderBottom:p.shape==="triangle"?`${p.size}px solid ${p.color}`:"none",
+          animation:`confettiFall 1.1s ${p.delay}s ease-in forwards`,
+          transform:`rotate(${p.rotation}deg)`,
+        }}/>
+      ))}
+      <style>{`
+        @keyframes confettiFall {
+          0%   { transform: translateY(0) rotate(0deg); opacity:1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity:0; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default function App(){
   const[tasks,setTasks]=useLS("mc_tasks_v3",[]);
   const[stats,setStats]=useLS("mc_stats_v3",defaultStats());
@@ -341,6 +397,8 @@ export default function App(){
   const[dragTask,setDragTask]=useState(null);
   const[showShop,setShowShop]=useState(false);
   const[dateSuggestion,setDateSuggestion]=useState(null);
+  const[confetti,setConfetti]=useState(false);
+  const[listening,setListening]=useState(false);
   const titleRef=useRef();
 
   const showToast=useCallback(msg=>setToast(msg),[]);
@@ -388,6 +446,12 @@ export default function App(){
 
   useEffect(()=>{if(Notification.permission==="default")Notification.requestPermission();},[]);
 
+  // Auto-open brain dump if not done today
+  useEffect(()=>{
+    const today=todayISO();
+    if(stats.lastDumpDate!==today){setView("brain");}
+  },[]);
+
   const openNew=()=>{setForm(defaultTask());setEditId(null);setDateSuggestion(null);setShowForm(true);setTimeout(()=>titleRef.current?.focus(),60);};
   const openEdit=t=>{setForm({...t});setEditId(t.id);setDateSuggestion(null);setShowForm(true);};
   const saveTask=()=>{
@@ -411,7 +475,11 @@ export default function App(){
       wasUndone = !t.done;
       return { ...t, done: !t.done };
     }));
-    if (wasUndone) earn(1, "task complete");
+    if (wasUndone) {
+      earn(1, "task complete");
+      setConfetti(true);
+      if (navigator.vibrate) navigator.vibrate(40);
+    }
   };
   const toggleUrgent=id=>setTasks(p=>p.map(t=>t.id===id?{...t,urgent:!t.urgent}:t));
   const letGoTask   =id=>{setTasks(p=>p.filter(t=>t.id!==id));setStats(s=>({...s,totalLetGo:s.totalLetGo+1}));earn(8,"you let something go");};
@@ -430,7 +498,7 @@ export default function App(){
       return{...s,totalDumps:s.totalDumps+1,lastDumpDate:today,currentStreak:streak};
     });
     earn(10,"brain dump done");
-    setBrainText("");setView("all");
+    setBrainText("");setView("today");
   };
 
   const buyDeco=item=>{
@@ -438,6 +506,24 @@ export default function App(){
     if(stats.ownedDecos.includes(item.id)){showToast("Already in your cottage!");return;}
     setStats(s=>({...s,points:s.points-item.cost,ownedDecos:[...s.ownedDecos,item.id],totalPurchases:s.totalPurchases+1}));
     showToast(`${item.emoji} ${item.label} added to your cottage!`);
+  };
+
+  const startVoice = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { showToast("Voice input not supported on this browser"); return; }
+    const r = new SR();
+    r.lang = "en-AU";
+    r.continuous = false;
+    r.interimResults = false;
+    r.onstart = () => setListening(true);
+    r.onend   = () => setListening(false);
+    r.onerror = () => setListening(false);
+    r.onresult = e => {
+      const t = e.results[0][0].transcript;
+      setBrainText(prev => prev ? prev + "
+" + t : t);
+    };
+    r.start();
   };
 
   const onDragStart=(e,id)=>{setDragTask(id);e.dataTransfer.effectAllowed="move";};
@@ -461,11 +547,18 @@ export default function App(){
   const listSource=view==="done"
     ? tasks.filter(t => t.done || (t.recurrence!=="None" && (t.completedDates||[]).includes(today)))
     : view==="today"
-    ? activeTasks.filter(t => isTaskToday(t) && !isTodayDone(t))
-    : activeTasks;
+    ? activeTasks.filter(t => isTaskToday(t) && !isTodayDone(t) && !t.someday)
+    : view==="someday"
+    ? activeTasks.filter(t => t.someday)
+    : activeTasks.filter(t => !t.someday);
+  const PRIORITY_ORDER = {high:0,medium:1,low:2,none:3};
   const filteredList=listSource
     .filter(t=>!filterTag||t.tags.includes(filterTag))
-    .sort((a,b)=>sortBy==="urgent"?(b.urgent?1:0)-(a.urgent?1:0):sortBy==="due"?(a.dueDate||"z").localeCompare(b.dueDate||"z"):new Date(b.createdAt)-new Date(a.createdAt));
+    .sort((a,b)=>{
+      if(sortBy==="urgent") return (PRIORITY_ORDER[a.priority||"none"]||3)-(PRIORITY_ORDER[b.priority||"none"]||3);
+      if(sortBy==="due")    return (a.dueDate||"z").localeCompare(b.dueDate||"z");
+      return new Date(b.createdAt)-new Date(a.createdAt);
+    });
 
   const urgentCount=activeTasks.filter(t=>t.urgent).length;
   const todayCount=activeTasks.filter(isTaskToday).length;
@@ -504,6 +597,7 @@ export default function App(){
             {id:"week",  label:"Week"},
             {id:"brain", label:"🧠 Dump"},
             {id:"cottage",label:"🏡 Home"},
+            {id:"someday",label:"🌤 Someday"},
             {id:"done",  label:"Done"},
             {id:"stats", label:"📊 Habits"},
           ].map(v=>(
@@ -512,7 +606,7 @@ export default function App(){
         </div>
       </div>
 
-      {!["brain","cottage","week","stats"].includes(view)&&(
+      {!["brain","cottage","week","stats","someday"].includes(view)&&(
         <div style={S.tagStrip}>
           <button style={{...S.tagPill,background:!filterTag?"#2a3a3a":"transparent",color:!filterTag?"#A8DADC":"#6a6a7a"}} onClick={()=>setFilterTag(null)}>All</button>
           {PRESET_TAGS.map(tag=>(
@@ -547,10 +641,10 @@ export default function App(){
         </div>
       )}
 
-      {["today","all","done"].includes(view)&&(
+      {["today","all","done","someday"].includes(view)&&(
         <div style={S.sortBar}>
           <span style={S.sortLabel}>Sort:</span>
-          {[["urgent","Urgency"],["due","Due"],["created","Added"]].map(([k,l])=>(
+          {[["urgent","Priority"],["due","Due"],["created","Added"]].map(([k,l])=>(
             <button key={k} style={{...S.sortBtn,...(sortBy===k?S.sortActive:{})}} onClick={()=>setSortBy(k)}>{l}</button>
           ))}
           {urgentCount>0&&<span style={S.urgentBadge}>🔴 {urgentCount} urgent</span>}
@@ -562,10 +656,16 @@ export default function App(){
           <div style={{fontSize:40,marginBottom:8}}>🧠</div>
           <h2 style={S.brainTitle}>Morning brain dump</h2>
           <p style={S.brainSub}>Don't organise. Don't prioritise. Just empty your mind — one thought per line.<br/>You'll earn <strong style={{color:"#A8DADC"}}>10 points</strong> just for showing up.</p>
-          <textarea style={S.brainArea} rows={12} value={brainText}
+          <textarea style={S.brainArea} rows={10} value={brainText}
             placeholder={"Call Emma's school\nPay the electricity bill\nEmail Sarah re: meeting\nBook Mum's GP appointment\nGet milk\nFix the dripping tap..."}
             onChange={e=>setBrainText(e.target.value)}/>
-          <button style={{...S.saveBtn,marginTop:12}} onClick={doBrainDump} disabled={!brainText.trim()}>✨ Empty my mind & earn 10 points</button>
+          <div style={{display:"flex",gap:8,marginTop:12}}>
+            <button style={{...S.saveBtn,flex:1}} onClick={doBrainDump} disabled={!brainText.trim()}>✨ Empty my mind & earn 10 points</button>
+            <button style={{...S.saveBtn,width:52,flex:"none",fontSize:20,padding:0,background:listening?"#FFC1CC22":"#1a2a3a",border:`1px solid ${listening?"#FFC1CC":"#3e3e3e"}`}}
+              onClick={startVoice} title="Voice input">
+              {listening?"🔴":"🎙️"}
+            </button>
+          </div>
           {stats.currentStreak>0&&<div style={S.streakBanner}>🕯️ {stats.currentStreak}-day ritual streak — keep going</div>}
         </div>
       )}
@@ -574,7 +674,7 @@ export default function App(){
         <div style={S.cottageView}>
           <div style={S.cottageTitle}>Your cosy cottage</div>
           <div style={S.cottageSubtitle}>Every task you let go, every brain dump — earns a little more peace.</div>
-          <Cottage owned={stats.ownedDecos}/>
+          <Cottage owned={stats.ownedDecos} hour={new Date().getHours()}/>
           <div style={S.pointsDisplay}>🌿 {stats.points} breathing points to spend</div>
           <button style={S.shopBtn} onClick={()=>setShowShop(true)}>Open decoration shop</button>
           <div style={S.badgesSection}>
@@ -645,16 +745,16 @@ export default function App(){
       )}
 
 
-      {["today","all","done"].includes(view)&&(
+      {["today","all","done","someday"].includes(view)&&(
         <div style={S.list}>
           {filteredList.length===0&&(
             <div style={S.empty}>
-              {view==="today"?"Nothing due today — breathe 🌿":view==="done"?"No completed tasks yet.":"No tasks here. Try a brain dump."}
+              {view==="today"?"Nothing due today — breathe 🌿":view==="done"?"No completed tasks yet.":view==="someday"?"Nothing in your someday list. Add tasks you want to keep but not act on yet.":"No tasks here. Try a brain dump."}
             </div>
           )}
           {filteredList.map(t=>(
             <TaskCard key={t.id} task={t} onToggle={id=>toggleDone(id,today)} onLetGo={letGoTask}
-              onDefer={deferTask} onToggleUrgent={toggleUrgent} onEdit={openEdit} today={today} isTodayDone={isTodayDone}/>
+              onDefer={deferTask} onToggleUrgent={toggleUrgent} onEdit={openEdit} onSomeday={id=>setTasks(p=>p.map(t=>t.id===id?{...t,someday:!t.someday}:t))} today={today} isTodayDone={isTodayDone}/>
           ))}
         </div>
       )}
@@ -684,9 +784,30 @@ export default function App(){
             )}
             <textarea style={{...S.input,...S.textarea}} placeholder="Notes, details, links..." rows={3}
               value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))}/>
-            <label style={S.checkRow}>
-              <input type="checkbox" checked={form.urgent} onChange={e=>setForm(f=>({...f,urgent:e.target.checked}))}/>
-              <span style={{fontSize:14,fontWeight:600,color:form.urgent?"#e06060":"#4a9e6a"}}>{form.urgent?"🔴 Urgent":"Mark as urgent"}</span>
+            <div style={S.fieldLabel}>Priority</div>
+            <div style={{display:"flex",gap:6,marginBottom:12}}>
+              {PRIORITY_LEVELS.map(p=>(
+                <button key={p.id} onClick={()=>setForm(f=>({...f,priority:p.id,urgent:p.id==="high"}))}
+                  style={{flex:1,padding:"6px 4px",borderRadius:8,border:`1.5px solid ${(form.priority||"none")===p.id?p.color:"#3e3e3e"}`,
+                    background:(form.priority||"none")===p.id?p.bg:"transparent",
+                    color:(form.priority||"none")===p.id?p.color:"#5a5a6a",
+                    fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <div style={S.fieldLabel}>Time needed</div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+              {TIME_ESTIMATES.map(t=>(
+                <button key={t} onClick={()=>setForm(f=>({...f,timeEstimate:f.timeEstimate===t?"":t}))}
+                  style={{...S.recBtn,...(form.timeEstimate===t?S.recActive:{})}}>
+                  {t}
+                </button>
+              ))}
+            </div>
+            <label style={{...S.checkRow,marginBottom:12}}>
+              <input type="checkbox" checked={form.someday||false} onChange={e=>setForm(f=>({...f,someday:e.target.checked}))}/>
+              <span style={{fontSize:14,fontWeight:600,color:form.someday?"#A8DADC":"#8a8a9a"}}>Move to someday (no due date pressure)</span>
             </label>
             <div style={S.fieldLabel}>Due date</div>
             <div style={{width:"100%",overflow:"hidden"}}>
@@ -795,20 +916,48 @@ export default function App(){
       )}
 
       {toast&&<Toast msg={toast} onDone={()=>setToast("")}/>}
+      <Confetti active={confetti} onDone={()=>setConfetti(false)}/>
       <div style={{height:40}}/>
     </div>
   );
 }
 
-function TaskCard({task,onToggle,onLetGo,onDefer,onToggleUrgent,onEdit,today,isTodayDone}){
+function TaskCard({task,onToggle,onLetGo,onDefer,onToggleUrgent,onEdit,onSomeday,today,isTodayDone}){
   const[expanded,setExpanded]=useState(false);
   const[showDefer,setShowDefer]=useState(false);
+  const[swipeX,setSwipeX]=useState(0);
+  const[swiping,setSwiping]=useState(false);
+  const touchStartX=useRef(0);
   const isDone = isTodayDone ? isTodayDone(task) : task.done;
   const isOverdue=task.dueDate&&task.dueDate<today&&!isDone;
+  const priority=getPriority(task.priority||"none");
   const tomorrow=()=>{const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split("T")[0];};
   const nextWeek=()=>{const d=new Date();d.setDate(d.getDate()+7);return d.toISOString().split("T")[0];};
+
+  const onTouchStart=e=>{touchStartX.current=e.touches[0].clientX;setSwiping(true);};
+  const onTouchMove=e=>{
+    const dx=e.touches[0].clientX-touchStartX.current;
+    if(Math.abs(dx)>8)setSwipeX(Math.max(-120,Math.min(0,dx)));
+  };
+  const onTouchEnd=()=>{
+    setSwiping(false);
+    if(swipeX<-80){onLetGo(task.id);}
+    else if(swipeX<-40){setShowDefer(true);}
+    setSwipeX(0);
+  };
   return(
-    <div style={{...S.card,...(task.urgent?S.cardUrgent:{}),...(isDone?S.cardDone:{}),...(isOverdue?S.cardOverdue:{})}}>
+    <div style={{position:"relative",overflow:"hidden",borderRadius:12,marginBottom:8}}>
+      {/* Swipe action hints */}
+      <div style={{position:"absolute",right:0,top:0,bottom:0,display:"flex",alignItems:"stretch",borderRadius:12}}>
+        <div style={{background:"#3a2a2e",width:60,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>📅</div>
+        <div style={{background:"#2a1a20",width:60,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,borderRadius:"0 12px 12px 0"}}>🤲</div>
+      </div>
+      <div style={{...S.card,marginBottom:0,borderRadius:12,
+        transform:`translateX(${swipeX}px)`,
+        transition:swiping?"none":"transform 0.3s ease",
+        ...(task.priority&&task.priority!=="none"?{borderLeftColor:priority.color,borderLeftWidth:3}:{}),
+        ...(task.urgent?S.cardUrgent:{}),(isDone?S.cardDone:{}),(isOverdue?S.cardOverdue:{})}}
+        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
       <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
         <button style={{...S.circle,...(isDone?S.circleDone:{})}} onClick={()=>onToggle(task.id)}>
           {isDone&&<span style={{color:"#2C2C2C",fontSize:13}}>✓</span>}
@@ -822,6 +971,8 @@ function TaskCard({task,onToggle,onLetGo,onDefer,onToggleUrgent,onEdit,today,isT
           <div style={S.cardMeta}>
             {task.dueDate&&<span style={{...S.metaChip,...(isOverdue?S.metaOverdue:{})}}>{isOverdue?"⚠️ ":""}{fmtDate(task.dueDate)}</span>}
             {(task.dueDays?.length>0?task.dueDays:[task.dueDay].filter(Boolean))&&!task.dueDate&&(task.dueDays?.length>0?task.dueDays:[task.dueDay].filter(Boolean)).length>0&&<span style={S.metaChip}>{(task.dueDays?.length>0?task.dueDays:[task.dueDay].filter(Boolean)).join(', ')}</span>}
+            {task.timeEstimate&&<span style={{...S.metaChip,color:"#A8DADC",borderColor:"#A8DADC44"}}>⏱ {task.timeEstimate}</span>}
+            {task.someday&&<span style={{...S.metaChip,color:"#B39CD0",borderColor:"#B39CD044"}}>🌤 Someday</span>}
             {task.reminder&&<span style={S.metaChip}>⏰ {fmtDateTime(task.reminder)}</span>}
             {task.tags.map(tag=>(
               <span key={tag} style={{...S.metaTag,color:getTagColor(tag),background:getTagColor(tag)+"22",border:`1px solid ${getTagColor(tag)}44`}}>{tag}</span>
@@ -835,8 +986,10 @@ function TaskCard({task,onToggle,onLetGo,onDefer,onToggleUrgent,onEdit,today,isT
           <button style={S.actBtn} onClick={()=>onToggleUrgent(task.id)}>{task.urgent?"🔕":"🔴"}</button>
           <button style={S.actBtn} onClick={()=>setShowDefer(s=>!s)}>📅</button>
           <button style={S.actBtn} onClick={()=>onLetGo(task.id)} title="Let go (+8pts)">🤲</button>
+          {onSomeday&&<button style={S.actBtn} onClick={()=>onSomeday(task.id)} title="Move to someday">🌤</button>}
         </div>
       </div>
+      </div>{/* end swipe card */}
       {showDefer&&(
         <div style={S.deferRow}>
           <span style={{fontSize:11,color:"#B39CD0",fontWeight:700}}>Defer to:</span>
