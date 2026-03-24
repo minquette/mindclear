@@ -632,8 +632,8 @@ function TaskCard({task,onToggle,onLetGo,onDefer,onToggleUrgent,onEdit,today}){
 // #B39CD0 — lavender accent (labels, secondary buttons)
 
 const S={
-  root:       {fontFamily:"'Lora',Georgia,serif",background:"#2C2C2C",minHeight:"100vh",maxWidth:760,margin:"0 auto",paddingBottom:60,color:"#E4E4E4"},
-  header:     {background:"linear-gradient(160deg,#1a1a1a 0%,#242424 60%,#2C2C2C 100%)",padding:"24px 20px 0",borderBottom:"1px solid #3e3e3e"},
+  root:       {fontFamily:"'Lora',Georgia,serif",background:"#2C2C2C",minHeight:"100vh",maxWidth:760,margin:"0 auto",paddingBottom:"max(60px, calc(40px + env(safe-area-inset-bottom)))",color:"#E4E4E4"},
+  header:     {background:"linear-gradient(160deg,#1a1a1a 0%,#242424 60%,#2C2C2C 100%)",paddingTop:"max(24px, env(safe-area-inset-top))",paddingLeft:"20px",paddingRight:"20px",paddingBottom:"0",borderBottom:"1px solid #3e3e3e"},
   headerInner:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16},
   logo:       {fontFamily:"'Lora',serif",fontSize:26,fontWeight:700,color:"#A8DADC",letterSpacing:"-0.3px"},
   tagline:    {fontFamily:"'Lora',serif",fontStyle:"italic",fontSize:13,color:"#6a9a9c",marginTop:2},
