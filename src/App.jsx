@@ -131,11 +131,15 @@ function StickerChart({ task, compact=false }) {
           ))}
           {cells.map((cell,i)=>(
             <div key={i} style={{
-              height:20,display:"flex",alignItems:"center",justifyContent:"center",
-              borderRadius:4,background:cell?.done?"transparent":"none",fontSize:cell?.done?14:10,
-              color:cell?.done?"inherit":"#2a2a3a",
+              height:24,display:"flex",alignItems:"center",justifyContent:"center",
+              borderRadius:4,background:cell?.done?"#1a3a2a":"transparent",
+              border:cell?"1px solid "+(cell.done?"#2a5a3a":"#2a2a3a"):"none",
+              fontSize:cell?.done?13:9,position:"relative",
             }}>
-              {cell ? (cell.done ? task.stickerEmoji||"⭐" : <span style={{fontSize:8,color:"#2a2a3a"}}>·</span>) : ""}
+              {cell ? (cell.done
+                ? <span title={cell.iso}>{task.stickerEmoji||"⭐"}</span>
+                : <span style={{color:"#3a3a4a",fontSize:9}}>{cell.d}</span>
+              ) : ""}
             </div>
           ))}
         </div>
@@ -374,17 +378,21 @@ export default function App(){
     setShowForm(false);
   };
 
-  const toggleDone = (id, todayStr) => setTasks(p => p.map(t => {
-    if (t.id !== id) return t;
-    if (t.recurrence !== "None") {
-      // Recurring: toggle today's date in completedDates
-      const completed = t.completedDates || [];
-      const alreadyDone = completed.includes(todayStr);
-      return { ...t, completedDates: alreadyDone ? completed.filter(d => d !== todayStr) : [...completed, todayStr] };
-    }
-    // Non-recurring: permanent done toggle
-    return { ...t, done: !t.done };
-  }));
+  const toggleDone = (id, todayStr) => {
+    let wasUndone = false;
+    setTasks(p => p.map(t => {
+      if (t.id !== id) return t;
+      if (t.recurrence !== "None") {
+        const completed = t.completedDates || [];
+        const alreadyDone = completed.includes(todayStr);
+        wasUndone = !alreadyDone;
+        return { ...t, completedDates: alreadyDone ? completed.filter(d => d !== todayStr) : [...completed, todayStr] };
+      }
+      wasUndone = !t.done;
+      return { ...t, done: !t.done };
+    }));
+    if (wasUndone) earn(1, "task complete");
+  };
   const toggleUrgent=id=>setTasks(p=>p.map(t=>t.id===id?{...t,urgent:!t.urgent}:t));
   const letGoTask   =id=>{setTasks(p=>p.filter(t=>t.id!==id));setStats(s=>({...s,totalLetGo:s.totalLetGo+1}));earn(8,"you let something go");};
   const deferTask   =(id,toDate)=>{setTasks(p=>p.map(t=>t.id===id?{...t,dueDate:toDate,dueDay:""}:t));setStats(s=>({...s,totalDeferred:s.totalDeferred+1}));earn(5,"deferred mindfully");};
@@ -434,7 +442,7 @@ export default function App(){
     ? tasks.filter(t => t.done || (t.recurrence!=="None" && (t.completedDates||[]).includes(today)))
     : view==="today"
     ? activeTasks.filter(t => isTaskToday(t) && !isTodayDone(t))
-    : activeTasks.filter(t => !isTodayDone(t));
+    : activeTasks;
   const filteredList=listSource
     .filter(t=>!filterTag||t.tags.includes(filterTag))
     .sort((a,b)=>sortBy==="urgent"?(b.urgent?1:0)-(a.urgent?1:0):sortBy==="due"?(a.dueDate||"z").localeCompare(b.dueDate||"z"):new Date(b.createdAt)-new Date(a.createdAt));
@@ -484,7 +492,7 @@ export default function App(){
         </div>
       </div>
 
-      {!["brain","cottage","week"].includes(view)&&(
+      {!["brain","cottage","week","stats"].includes(view)&&(
         <div style={S.tagStrip}>
           <button style={{...S.tagPill,background:!filterTag?"#2a3a3a":"transparent",color:!filterTag?"#A8DADC":"#6a6a7a"}} onClick={()=>setFilterTag(null)}>All</button>
           {PRESET_TAGS.map(tag=>(
@@ -496,15 +504,24 @@ export default function App(){
 
 
       {view==="stats"&&(
+        <div style={{display:"flex",gap:6,padding:"10px 14px",overflowX:"auto",background:"#222222",borderBottom:"1px solid #3e3e3e",marginBottom:0}}>
+          <button style={{border:"1px solid #3e3e3e",borderRadius:14,padding:"4px 11px",fontSize:11,cursor:"pointer",whiteSpace:"nowrap",fontWeight:600,background:!filterTag?"#2a3a3a":"transparent",color:!filterTag?"#A8DADC":"#6a6a7a"}} onClick={()=>setFilterTag(null)}>All</button>
+          {PRESET_TAGS.map(tag=>(
+            <button key={tag} style={{border:filterTag===tag?`1px solid ${getTagColor(tag)}`:"1px solid #3e3e3e",borderRadius:14,padding:"4px 11px",fontSize:11,cursor:"pointer",whiteSpace:"nowrap",fontWeight:600,background:filterTag===tag?getTagColor(tag)+"33":"transparent",color:filterTag===tag?getTagColor(tag):"#6a6a7a"}}
+              onClick={()=>setFilterTag(filterTag===tag?null:tag)}>{tag}</button>
+          ))}
+        </div>
+      )}
+      {view==="stats"&&(
         <div style={{padding:"12px 14px"}}>
           <div style={{fontFamily:"-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif",fontSize:20,fontWeight:700,color:"#A8DADC",marginBottom:4}}>Habit tracker</div>
           <div style={{fontSize:13,color:"#6a6a7a",marginBottom:16,fontStyle:"italic"}}>Your recurring tasks this month</div>
-          {tasks.filter(t=>t.recurrence!=="None"&&!t.done&&t.showStickerChart).length===0 && (
+          {tasks.filter(t=>t.recurrence!=="None"&&!t.done&&t.showStickerChart&&(!filterTag||t.tags.includes(filterTag))).length===0 && (
             <div style={{textAlign:"center",padding:40,color:"#5a5a6a",fontSize:15,fontStyle:"italic"}}>
-              No habit charts yet. Edit a recurring task and turn on "Track this habit" to add one.
+              {filterTag ? `No tracked habits tagged "${filterTag}".` : "No habit charts yet. Edit a recurring task and turn on "Track this habit" to add one."}
             </div>
           )}
-          {tasks.filter(t=>t.recurrence!=="None"&&!t.done&&t.showStickerChart).map(t=>(
+          {tasks.filter(t=>t.recurrence!=="None"&&!t.done&&t.showStickerChart&&(!filterTag||t.tags.includes(filterTag))).map(t=>(
             <StickerChart key={t.id} task={t} compact={false}/>
           ))}
         </div>
