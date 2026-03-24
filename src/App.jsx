@@ -116,7 +116,6 @@ function StickerChart({ task, compact=false }) {
   while (cells.length % 7 !== 0) cells.push(null);
 
   const total = completed.filter(d=>d.startsWith(`${year}-${String(month+1).padStart(2,"0")}`)).length;
-  const streak = calcStreak(completed);
 
   if (compact) {
     // Mini inline version — just show this month's dots in a single row wrap
@@ -124,7 +123,7 @@ function StickerChart({ task, compact=false }) {
       <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid #3e3e3e"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
           <span style={{fontSize:12,color:"#B39CD0",fontWeight:700}}>{monthName}</span>
-          <span style={{fontSize:11,color:"#6a6a7a"}}>{total} this month · {streak} day streak</span>
+          <span style={{fontSize:11,color:"#6a6a7a"}}>{total} this month</span>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}}>
           {["M","T","W","T","F","S","S"].map((d,i)=>(
@@ -154,7 +153,6 @@ function StickerChart({ task, compact=false }) {
         </div>
         <div style={{textAlign:"right"}}>
           <div style={{fontSize:20}}>{task.stickerEmoji||"⭐"}</div>
-          <div style={{fontSize:11,color:"#B39CD0",fontWeight:700,marginTop:2}}>{streak} day streak</div>
         </div>
       </div>
       <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
@@ -186,20 +184,6 @@ function StickerChart({ task, compact=false }) {
       </div>
     </div>
   );
-}
-
-function calcStreak(completedDates) {
-  if (!completedDates || completedDates.length === 0) return 0;
-  const sorted = [...completedDates].sort().reverse();
-  const todayStr = (() => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
-  let streak = 0;
-  let check = new Date(todayStr);
-  for (let i=0; i<365; i++) {
-    const iso = `${check.getFullYear()}-${String(check.getMonth()+1).padStart(2,"0")}-${String(check.getDate()).padStart(2,"0")}`;
-    if (completedDates.includes(iso)) { streak++; check.setDate(check.getDate()-1); }
-    else break;
-  }
-  return streak;
 }
 
 function Cottage({owned}){
