@@ -64,7 +64,7 @@ const BADGES = [
 const defaultTask = () => ({
   id:`t_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
   title:"",notes:"",urgent:false,dueDate:"",dueDay:"",dueDays:[],recurrence:"None",
-  tags:[],reminder:"",done:false,createdAt:new Date().toISOString(),
+  tags:[],reminder:"",done:false,completedDates:[],createdAt:new Date().toISOString(),
 });
 const defaultStats = () => ({
   points:0,totalPoints:0,totalLetGo:0,totalDumps:0,totalDeferred:0,
@@ -279,7 +279,17 @@ export default function App(){
     setShowForm(false);
   };
 
-  const toggleDone  =id=>setTasks(p=>p.map(t=>t.id===id?{...t,done:!t.done}:t));
+  const toggleDone = (id, todayStr) => setTasks(p => p.map(t => {
+    if (t.id !== id) return t;
+    if (t.recurrence !== "None") {
+      // Recurring: toggle today's date in completedDates
+      const completed = t.completedDates || [];
+      const alreadyDone = completed.includes(todayStr);
+      return { ...t, completedDates: alreadyDone ? completed.filter(d => d !== todayStr) : [...completed, todayStr] };
+    }
+    // Non-recurring: permanent done toggle
+    return { ...t, done: !t.done };
+  }));
   const toggleUrgent=id=>setTasks(p=>p.map(t=>t.id===id?{...t,urgent:!t.urgent}:t));
   const letGoTask   =id=>{setTasks(p=>p.filter(t=>t.id!==id));setStats(s=>({...s,totalLetGo:s.totalLetGo+1}));earn(8,"you let something go");};
   const deferTask   =(id,toDate)=>{setTasks(p=>p.map(t=>t.id===id?{...t,dueDate:toDate,dueDay:""}:t));setStats(s=>({...s,totalDeferred:s.totalDeferred+1}));earn(5,"deferred mindfully");};
@@ -321,8 +331,15 @@ export default function App(){
     t.recurrence==="Daily"||
     (t.recurrence==="Weekly"&&(t.dueDay===todayDay||(t.dueDays||[]).includes(todayDay)));
 
+  const isTodayDone = t => t.recurrence !== "None"
+    ? (t.completedDates||[]).includes(today)
+    : t.done;
   const activeTasks=tasks.filter(t=>!t.done);
-  const listSource=view==="done"?tasks.filter(t=>t.done):view==="today"?activeTasks.filter(isTaskToday):activeTasks;
+  const listSource=view==="done"
+    ? tasks.filter(t => t.done || (t.recurrence!=="None" && (t.completedDates||[]).includes(today)))
+    : view==="today"
+    ? activeTasks.filter(t => isTaskToday(t) && !isTodayDone(t))
+    : activeTasks.filter(t => !isTodayDone(t));
   const filteredList=listSource
     .filter(t=>!filterTag||t.tags.includes(filterTag))
     .sort((a,b)=>sortBy==="urgent"?(b.urgent?1:0)-(a.urgent?1:0):sortBy==="due"?(a.dueDate||"z").localeCompare(b.dueDate||"z"):new Date(b.createdAt)-new Date(a.createdAt));
@@ -486,8 +503,8 @@ export default function App(){
             </div>
           )}
           {filteredList.map(t=>(
-            <TaskCard key={t.id} task={t} onToggle={toggleDone} onLetGo={letGoTask}
-              onDefer={deferTask} onToggleUrgent={toggleUrgent} onEdit={openEdit} today={today}/>
+            <TaskCard key={t.id} task={t} onToggle={id=>toggleDone(id,today)} onLetGo={letGoTask}
+              onDefer={deferTask} onToggleUrgent={toggleUrgent} onEdit={openEdit} today={today} isTodayDone={isTodayDone}/>
           ))}
         </div>
       )}
@@ -602,23 +619,24 @@ export default function App(){
   );
 }
 
-function TaskCard({task,onToggle,onLetGo,onDefer,onToggleUrgent,onEdit,today}){
+function TaskCard({task,onToggle,onLetGo,onDefer,onToggleUrgent,onEdit,today,isTodayDone}){
   const[expanded,setExpanded]=useState(false);
   const[showDefer,setShowDefer]=useState(false);
-  const isOverdue=task.dueDate&&task.dueDate<today&&!task.done;
+  const isDone = isTodayDone ? isTodayDone(task) : task.done;
+  const isOverdue=task.dueDate&&task.dueDate<today&&!isDone;
   const tomorrow=()=>{const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split("T")[0];};
   const nextWeek=()=>{const d=new Date();d.setDate(d.getDate()+7);return d.toISOString().split("T")[0];};
   return(
-    <div style={{...S.card,...(task.urgent?S.cardUrgent:{}),...(task.done?S.cardDone:{}),...(isOverdue?S.cardOverdue:{})}}>
+    <div style={{...S.card,...(task.urgent?S.cardUrgent:{}),...(isDone?S.cardDone:{}),...(isOverdue?S.cardOverdue:{})}}>
       <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
-        <button style={{...S.circle,...(task.done?S.circleDone:{})}} onClick={()=>onToggle(task.id)}>
-          {task.done&&<span style={{color:"#2C2C2C",fontSize:13}}>✓</span>}
+        <button style={{...S.circle,...(isDone?S.circleDone:{})}} onClick={()=>onToggle(task.id)}>
+          {isDone&&<span style={{color:"#2C2C2C",fontSize:13}}>✓</span>}
         </button>
         <div style={{flex:1,cursor:"pointer"}} onClick={()=>setExpanded(e=>!e)}>
-          <div style={{...S.cardTitle,...(task.done?S.strikethru:{})}}>
-            {task.urgent&&!task.done&&<span style={{color:"#e06060",marginRight:4}}>●</span>}
+          <div style={{...S.cardTitle,...(isDone?S.strikethru:{})}}>
+            {task.urgent&&!isDone&&<span style={{color:"#e06060",marginRight:4}}>●</span>}
             {task.title}
-            {task.recurrence!=="None"&&<span style={S.recChip}>↻ {task.recurrence}</span>}
+            {task.recurrence!=="None"&&<span style={S.recChip}>↻ {task.recurrence}{(task.completedDates||[]).length>0?` · ${(task.completedDates||[]).length}✓`:""}</span>}
           </div>
           <div style={S.cardMeta}>
             {task.dueDate&&<span style={{...S.metaChip,...(isOverdue?S.metaOverdue:{})}}>{isOverdue?"⚠️ ":""}{fmtDate(task.dueDate)}</span>}
