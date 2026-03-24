@@ -211,9 +211,9 @@ function Toast({msg,onDone}){
   useEffect(()=>{const t=setTimeout(onDone,3000);return()=>clearTimeout(t);},[onDone]);
   return(
     <div style={{position:"fixed",bottom:90,left:"50%",transform:"translateX(-50%)",
-      background:"#0a2a14",color:"#6ad48a",padding:"12px 22px",borderRadius:20,
+      background:"#1a2a2a",color:"#A8DADC",padding:"12px 22px",borderRadius:20,
       fontSize:14,fontFamily:"'Lora',Georgia,serif",boxShadow:"0 4px 24px rgba(0,0,0,0.6)",
-      zIndex:1000,whiteSpace:"nowrap",border:"1px solid #2a5a3a",animation:"fadeup 0.3s ease"}}>
+      zIndex:1000,whiteSpace:"nowrap",border:"1px solid #A8DADC44",animation:"fadeup 0.3s ease"}}>
       {msg}
     </div>
   );
@@ -332,11 +332,11 @@ export default function App(){
         @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@400;600;700&display=swap');
         @keyframes fadeup{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
         *{box-sizing:border-box;margin:0;padding:0;}
-        body{background:#0d1f14;}
+        body{background:#2C2C2C;}
         input,select,textarea,button{font-family:'Nunito',sans-serif;}
-        ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:#2a5a3a;border-radius:4px}
+        ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:#4a4a5a;border-radius:4px}
         input[type=date],input[type=datetime-local]{color-scheme:dark;}
-        ::placeholder{color:#2a5a3a;}
+        ::placeholder{color:#5a5a6a;}
       `}</style>
 
       <div style={S.header}>
@@ -366,9 +366,9 @@ export default function App(){
 
       {!["brain","cottage","week"].includes(view)&&(
         <div style={S.tagStrip}>
-          <button style={{...S.tagPill,background:!filterTag?"#1a4a2a":"transparent",color:!filterTag?"#6ad48a":"#2a6a3a"}} onClick={()=>setFilterTag(null)}>All</button>
+          <button style={{...S.tagPill,background:!filterTag?"#2a3a3a":"transparent",color:!filterTag?"#A8DADC":"#6a6a7a"}} onClick={()=>setFilterTag(null)}>All</button>
           {PRESET_TAGS.map(tag=>(
-            <button key={tag} style={{...S.tagPill,background:filterTag===tag?getTagColor(tag)+"33":"transparent",color:filterTag===tag?getTagColor(tag):"#2a6a3a",border:filterTag===tag?`1px solid ${getTagColor(tag)}`:"1px solid #1a3a22"}}
+            <button key={tag} style={{...S.tagPill,background:filterTag===tag?getTagColor(tag)+"33":"transparent",color:filterTag===tag?getTagColor(tag):"#6a6a7a",border:filterTag===tag?`1px solid ${getTagColor(tag)}`:"1px solid #3e3e3e"}}
               onClick={()=>setFilterTag(filterTag===tag?null:tag)}>{tag}</button>
           ))}
         </div>
@@ -388,7 +388,7 @@ export default function App(){
         <div style={S.brainBox}>
           <div style={{fontSize:40,marginBottom:8}}>🧠</div>
           <h2 style={S.brainTitle}>Morning Brain Dump</h2>
-          <p style={S.brainSub}>Don't organise. Don't prioritise. Just empty your mind — one thought per line.<br/>You'll earn <strong style={{color:"#6ad48a"}}>10 points</strong> just for showing up.</p>
+          <p style={S.brainSub}>Don't organise. Don't prioritise. Just empty your mind — one thought per line.<br/>You'll earn <strong style={{color:"#A8DADC"}}>10 points</strong> just for showing up.</p>
           <textarea style={S.brainArea} rows={12} value={brainText}
             placeholder={"Call Emma's school\nPay the electricity bill\nEmail Sarah re: meeting\nBook Mum's GP appointment\nGet milk\nFix the dripping tap..."}
             onChange={e=>setBrainText(e.target.value)}/>
@@ -437,12 +437,12 @@ export default function App(){
                 t.dueDate===date||(!t.dueDate&&t.dueDay===dayLabel)||t.recurrence==="Daily"||(t.recurrence==="Weekly"&&t.dueDay===dayLabel)
               );
               const load=dayTasks.length;
-              const bg=dragOver===date?"#1a3a28":load===0?"#0a1a0e":load<=2?"#0d1f14":load<=4?"#1a1a08":"#1a0808";
-              const border=isToday?"#4a9e6a":load>=5?"#8a2a2a":load>=3?"#8a7a20":"#1a3a22";
+              const bg=dragOver===date?"#2a3a3a":load===0?"#222222":load<=2?"#2C2C2C":load<=4?"#2a2a1a":"#2a1a1a";
+              const border=isToday?"#A8DADC":load>=5?"#FFC1CC66":load>=3?"#B39CD066":"#3e3e3e";
               return(
                 <div key={date} style={{...S.dayCol,background:bg,border:`2px solid ${border}`}}
                   onDragOver={e=>onDragOver(e,date)} onDrop={e=>onDrop(e,date)} onDragLeave={()=>setDragOver(null)}>
-                  <div style={{...S.dayLabel,...(isToday?{color:"#6ad48a"}:{})}}>
+                  <div style={{...S.dayLabel,...(isToday?{color:"#A8DADC"}:{})}}>
                     {dayLabel}
                     <span style={S.dayDate}>{fmtDate(date)}</span>
                   </div>
@@ -515,7 +515,7 @@ export default function App(){
             <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
               {PRESET_TAGS.map(tag=>(
                 <button key={tag} onClick={()=>setForm(f=>({...f,tags:f.tags.includes(tag)?f.tags.filter(x=>x!==tag):[...f.tags,tag]}))}
-                  style={{...S.tagToggle,background:form.tags.includes(tag)?getTagColor(tag)+"33":"transparent",color:form.tags.includes(tag)?getTagColor(tag):"#2a7a4a",border:form.tags.includes(tag)?`1px solid ${getTagColor(tag)}`:"1px solid #1a3a22"}}>
+                  style={{...S.tagToggle,background:form.tags.includes(tag)?getTagColor(tag)+"33":"transparent",color:form.tags.includes(tag)?getTagColor(tag):"#6a6a7a",border:form.tags.includes(tag)?`1px solid ${getTagColor(tag)}`:"1px solid #3e3e3e"}}>
                   {tag}
                 </button>
               ))}
@@ -543,7 +543,7 @@ export default function App(){
               <span style={S.modalTitle}>🏡 Decoration Shop</span>
               <button style={S.closeBtn} onClick={()=>setShowShop(false)}>✕</button>
             </div>
-            <div style={{color:"#2a7a4a",fontSize:13,marginBottom:16}}>You have <strong style={{color:"#6ad48a"}}>{stats.points} points</strong>. Earn more by letting go and brain dumping each morning.</div>
+            <div style={{color:"#8a8a9a",fontSize:13,marginBottom:16}}>You have <strong style={{color:"#FFC1CC"}}>{stats.points} points</strong>. Earn more by letting go and brain dumping each morning.</div>
             {SHOP_TIERS.map(tier=>(
               <div key={tier.tier} style={{marginBottom:20}}>
                 <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",color:tier.color,borderBottom:`1px solid ${tier.color}44`,paddingBottom:4,marginBottom:8}}>{tier.tier}</div>
@@ -556,7 +556,7 @@ export default function App(){
                         <div style={{fontSize:26}}>{item.emoji}</div>
                         <div style={S.shopName}>{item.label}</div>
                         <div style={S.shopDesc}>{item.desc}</div>
-                        <div style={{...S.shopCost,color:canAfford||owned?"#6ad48a":"#3a6a4a"}}>{item.cost} pts</div>
+                        <div style={{...S.shopCost,color:canAfford||owned?"#A8DADC":"#4a4a5a"}}>{item.cost} pts</div>
                         <button style={{...S.shopBuy,...(!canAfford&&!owned?S.shopCant:{}),...(owned?S.shopDone:{})}}
                           onClick={()=>buyDeco(item)} disabled={owned}>
                           {owned?"✓ Added":canAfford?"Buy":"Need more"}
@@ -587,7 +587,7 @@ function TaskCard({task,onToggle,onLetGo,onDefer,onToggleUrgent,onEdit,today}){
     <div style={{...S.card,...(task.urgent?S.cardUrgent:{}),...(task.done?S.cardDone:{}),...(isOverdue?S.cardOverdue:{})}}>
       <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
         <button style={{...S.circle,...(task.done?S.circleDone:{})}} onClick={()=>onToggle(task.id)}>
-          {task.done&&<span style={{color:"#0d1f14",fontSize:13}}>✓</span>}
+          {task.done&&<span style={{color:"#2C2C2C",fontSize:13}}>✓</span>}
         </button>
         <div style={{flex:1,cursor:"pointer"}} onClick={()=>setExpanded(e=>!e)}>
           <div style={{...S.cardTitle,...(task.done?S.strikethru:{})}}>
@@ -614,7 +614,7 @@ function TaskCard({task,onToggle,onLetGo,onDefer,onToggleUrgent,onEdit,today}){
       </div>
       {showDefer&&(
         <div style={S.deferRow}>
-          <span style={{fontSize:11,color:"#2a7a4a",fontWeight:700}}>Defer to:</span>
+          <span style={{fontSize:11,color:"#B39CD0",fontWeight:700}}>Defer to:</span>
           <button style={S.deferBtn} onClick={()=>{onDefer(task.id,tomorrow());setShowDefer(false);}}>Tomorrow</button>
           <button style={S.deferBtn} onClick={()=>{onDefer(task.id,nextWeek());setShowDefer(false);}}>Next week</button>
           <button style={{...S.deferBtn,color:"#3a5a4a"}} onClick={()=>setShowDefer(false)}>Cancel</button>
@@ -624,95 +624,102 @@ function TaskCard({task,onToggle,onLetGo,onDefer,onToggleUrgent,onEdit,today}){
   );
 }
 
+// Palette:
+// #2C2C2C — background (charcoal)
+// #E4E4E4 — primary text / borders (light grey)
+// #A8DADC — teal accent (logo, headings, active)
+// #FFC1CC — pink accent (points, urgent, streaks)
+// #B39CD0 — lavender accent (labels, secondary buttons)
+
 const S={
-  root:       {fontFamily:"'Lora',Georgia,serif",background:"#0d1f14",minHeight:"100vh",maxWidth:760,margin:"0 auto",paddingBottom:60,color:"#a0d8b0"},
-  header:     {background:"linear-gradient(160deg,#071410 0%,#0d1f14 60%,#112814 100%)",padding:"24px 20px 0",borderBottom:"1px solid #1a3a22"},
+  root:       {fontFamily:"'Lora',Georgia,serif",background:"#2C2C2C",minHeight:"100vh",maxWidth:760,margin:"0 auto",paddingBottom:60,color:"#E4E4E4"},
+  header:     {background:"linear-gradient(160deg,#1a1a1a 0%,#242424 60%,#2C2C2C 100%)",padding:"24px 20px 0",borderBottom:"1px solid #3e3e3e"},
   headerInner:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16},
-  logo:       {fontFamily:"'Lora',serif",fontSize:26,fontWeight:700,color:"#5ac878",letterSpacing:"-0.3px"},
-  tagline:    {fontFamily:"'Lora',serif",fontStyle:"italic",fontSize:13,color:"#2a5a32",marginTop:2},
-  pointsChip: {background:"#0a1f10",color:"#5ac878",padding:"5px 12px",borderRadius:16,fontSize:13,fontWeight:700,cursor:"pointer",border:"1px solid #1a4a22"},
-  addBtn:     {background:"#1a4a28",color:"#7ae898",border:"none",borderRadius:18,padding:"8px 18px",fontWeight:700,cursor:"pointer",fontSize:13,boxShadow:"0 2px 12px rgba(0,0,0,0.5)"},
+  logo:       {fontFamily:"'Lora',serif",fontSize:26,fontWeight:700,color:"#A8DADC",letterSpacing:"-0.3px"},
+  tagline:    {fontFamily:"'Lora',serif",fontStyle:"italic",fontSize:13,color:"#6a9a9c",marginTop:2},
+  pointsChip: {background:"#3a2a2e",color:"#FFC1CC",padding:"5px 12px",borderRadius:16,fontSize:13,fontWeight:700,cursor:"pointer",border:"1px solid #5a3a40"},
+  addBtn:     {background:"#3a3a50",color:"#B39CD0",border:"none",borderRadius:18,padding:"8px 18px",fontWeight:700,cursor:"pointer",fontSize:13,boxShadow:"0 2px 12px rgba(0,0,0,0.4)"},
   nav:        {display:"flex",gap:2,overflowX:"auto"},
-  navBtn:     {background:"none",border:"none",color:"#1a5a2a",padding:"9px 12px",cursor:"pointer",fontSize:12,fontWeight:600,borderRadius:"6px 6px 0 0",whiteSpace:"nowrap"},
-  navActive:  {background:"#0d1f14",color:"#5ac878",fontWeight:700},
-  tagStrip:   {display:"flex",gap:6,padding:"10px 14px",overflowX:"auto",background:"#071410",borderBottom:"1px solid #1a3a22"},
-  tagPill:    {border:"1px solid #1a3a22",borderRadius:14,padding:"4px 11px",fontSize:11,cursor:"pointer",whiteSpace:"nowrap",fontWeight:600,background:"transparent"},
-  sortBar:    {display:"flex",gap:6,alignItems:"center",padding:"8px 14px",background:"#0d1f14",borderBottom:"1px solid #1a3a22"},
-  sortLabel:  {fontSize:11,color:"#1a5a2a",marginRight:4},
-  sortBtn:    {background:"none",border:"1px solid #1a3a22",borderRadius:12,padding:"3px 10px",fontSize:11,cursor:"pointer",color:"#2a6a3a"},
-  sortActive: {background:"#1a3a22",color:"#5ac878",borderColor:"#2a5a32"},
-  urgentBadge:{marginLeft:"auto",fontSize:11,color:"#d06060",fontWeight:700},
+  navBtn:     {background:"none",border:"none",color:"#5a5a6a",padding:"9px 12px",cursor:"pointer",fontSize:12,fontWeight:600,borderRadius:"6px 6px 0 0",whiteSpace:"nowrap"},
+  navActive:  {background:"#2C2C2C",color:"#A8DADC",fontWeight:700},
+  tagStrip:   {display:"flex",gap:6,padding:"10px 14px",overflowX:"auto",background:"#222222",borderBottom:"1px solid #3e3e3e"},
+  tagPill:    {border:"1px solid #3e3e3e",borderRadius:14,padding:"4px 11px",fontSize:11,cursor:"pointer",whiteSpace:"nowrap",fontWeight:600,background:"transparent",color:"#8a8a9a"},
+  sortBar:    {display:"flex",gap:6,alignItems:"center",padding:"8px 14px",background:"#2C2C2C",borderBottom:"1px solid #3e3e3e"},
+  sortLabel:  {fontSize:11,color:"#6a6a7a",marginRight:4},
+  sortBtn:    {background:"none",border:"1px solid #3e3e3e",borderRadius:12,padding:"3px 10px",fontSize:11,cursor:"pointer",color:"#8a8a9a"},
+  sortActive: {background:"#2a3a3a",color:"#A8DADC",borderColor:"#A8DADC66"},
+  urgentBadge:{marginLeft:"auto",fontSize:11,color:"#FFC1CC",fontWeight:700},
   brainBox:   {padding:"28px 20px",maxWidth:600,margin:"0 auto"},
-  brainTitle: {fontFamily:"'Lora',serif",fontSize:22,fontWeight:700,color:"#5ac878",marginBottom:6},
-  brainSub:   {color:"#2a6a3a",fontSize:14,lineHeight:1.6,marginBottom:16},
-  brainArea:  {width:"100%",border:"1.5px solid #1a3a22",borderRadius:10,padding:14,fontSize:14,lineHeight:1.8,resize:"vertical",outline:"none",color:"#8ad8a8",background:"#071410",fontFamily:"'Nunito',sans-serif"},
-  streakBanner:{marginTop:12,background:"#071a0e",color:"#3a8a4a",padding:"10px 16px",borderRadius:10,fontSize:13,textAlign:"center",fontStyle:"italic",border:"1px solid #1a3a22"},
+  brainTitle: {fontFamily:"'Lora',serif",fontSize:22,fontWeight:700,color:"#A8DADC",marginBottom:6},
+  brainSub:   {color:"#8a8a9a",fontSize:14,lineHeight:1.6,marginBottom:16},
+  brainArea:  {width:"100%",border:"1.5px solid #3e3e3e",borderRadius:10,padding:14,fontSize:14,lineHeight:1.8,resize:"vertical",outline:"none",color:"#E4E4E4",background:"#222222",fontFamily:"'Nunito',sans-serif"},
+  streakBanner:{marginTop:12,background:"#2a2230",color:"#B39CD0",padding:"10px 16px",borderRadius:10,fontSize:13,textAlign:"center",fontStyle:"italic",border:"1px solid #4a3a5a"},
   cottageView:   {padding:"20px 16px",maxWidth:500,margin:"0 auto",textAlign:"center"},
-  cottageTitle:  {fontFamily:"'Lora',serif",fontSize:22,fontWeight:700,color:"#5ac878",marginBottom:4},
-  cottageSubtitle:{color:"#2a6a3a",fontSize:13,fontStyle:"italic",marginBottom:16,lineHeight:1.5},
-  pointsDisplay: {fontSize:18,fontWeight:700,color:"#5ac878",margin:"12px 0"},
-  shopBtn:       {background:"#0a2a14",color:"#5ac878",border:"1px solid #1a4a22",borderRadius:20,padding:"10px 24px",fontSize:14,cursor:"pointer",fontWeight:700,marginBottom:20},
+  cottageTitle:  {fontFamily:"'Lora',serif",fontSize:22,fontWeight:700,color:"#A8DADC",marginBottom:4},
+  cottageSubtitle:{color:"#8a8a9a",fontSize:13,fontStyle:"italic",marginBottom:16,lineHeight:1.5},
+  pointsDisplay: {fontSize:18,fontWeight:700,color:"#FFC1CC",margin:"12px 0"},
+  shopBtn:       {background:"#2a3a3a",color:"#A8DADC",border:"1px solid #A8DADC66",borderRadius:20,padding:"10px 24px",fontSize:14,cursor:"pointer",fontWeight:700,marginBottom:20},
   badgesSection: {textAlign:"left",marginTop:16},
-  badgesTitle:   {fontSize:15,fontWeight:700,color:"#5ac878",marginBottom:8},
-  badgesEmpty:   {color:"#1a5a2a",fontSize:13,fontStyle:"italic"},
+  badgesTitle:   {fontSize:15,fontWeight:700,color:"#A8DADC",marginBottom:8},
+  badgesEmpty:   {color:"#5a5a6a",fontSize:13,fontStyle:"italic"},
   badgeGrid:     {display:"flex",flexWrap:"wrap",gap:8},
-  badgeChip:     {background:"#071410",border:"1.5px solid #1a3a22",borderRadius:12,padding:"8px 12px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,minWidth:80},
-  badgeLabel:    {fontSize:11,color:"#2a7a4a",fontWeight:700,textAlign:"center"},
-  nextBadges:    {marginTop:14,background:"#071410",borderRadius:10,padding:"10px 14px",border:"1px solid #1a3a22"},
-  nextBadgesTitle:{fontSize:12,color:"#1a5a2a",fontWeight:700,marginBottom:6},
-  nextBadge:     {fontSize:13,color:"#2a6a3a",marginBottom:4,lineHeight:1.5},
+  badgeChip:     {background:"#222222",border:"1.5px solid #3e3e3e",borderRadius:12,padding:"8px 12px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,minWidth:80},
+  badgeLabel:    {fontSize:11,color:"#B39CD0",fontWeight:700,textAlign:"center"},
+  nextBadges:    {marginTop:14,background:"#222222",borderRadius:10,padding:"10px 14px",border:"1px solid #3e3e3e"},
+  nextBadgesTitle:{fontSize:12,color:"#6a6a7a",fontWeight:700,marginBottom:6},
+  nextBadge:     {fontSize:13,color:"#8a8a9a",marginBottom:4,lineHeight:1.5},
   weekView:   {padding:"10px 8px"},
-  weekTitle:  {fontFamily:"'Lora',serif",fontSize:18,fontWeight:700,color:"#5ac878",marginBottom:2},
-  weekSub:    {fontSize:10,color:"#1a5a2a",fontStyle:"italic",marginBottom:8},
+  weekTitle:  {fontFamily:"'Lora',serif",fontSize:18,fontWeight:700,color:"#A8DADC",marginBottom:2},
+  weekSub:    {fontSize:10,color:"#6a6a7a",fontStyle:"italic",marginBottom:8},
   weekGrid:   {display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3},
   dayCol:     {borderRadius:8,padding:"5px 3px",minHeight:130,transition:"background 0.2s"},
-  dayLabel:   {fontSize:10,fontWeight:700,color:"#2a6a3a",textAlign:"center",marginBottom:1},
-  dayDate:    {display:"block",fontSize:9,color:"#1a4a2a",fontWeight:400},
+  dayLabel:   {fontSize:10,fontWeight:700,color:"#8a8a9a",textAlign:"center",marginBottom:1},
+  dayDate:    {display:"block",fontSize:9,color:"#5a5a6a",fontWeight:400},
   dayLoad:    {fontSize:9,textAlign:"center",marginBottom:3,fontWeight:700},
-  weekChip:   {background:"#0a1f10",borderRadius:4,padding:"2px 3px",fontSize:9,cursor:"grab",display:"flex",alignItems:"center",gap:2,border:"1px solid #1a3a22",marginBottom:2,borderLeft:"2px solid #1a5a2a"},
-  weekX:      {background:"none",border:"none",color:"#5a3a2a",cursor:"pointer",fontSize:9,padding:0,flexShrink:0},
+  weekChip:   {background:"#333333",borderRadius:4,padding:"2px 3px",fontSize:9,cursor:"grab",display:"flex",alignItems:"center",gap:2,border:"1px solid #4a4a5a",marginBottom:2,borderLeft:"2px solid #B39CD0"},
+  weekX:      {background:"none",border:"none",color:"#FFC1CC",cursor:"pointer",fontSize:9,padding:0,flexShrink:0},
   freeTime:   {marginTop:3,fontSize:8,textAlign:"center"},
   list:       {padding:"10px 12px"},
-  empty:      {textAlign:"center",padding:40,color:"#1a5a2a",fontSize:15,fontStyle:"italic"},
-  card:       {background:"#0a1a10",borderRadius:12,marginBottom:8,padding:"12px 10px",border:"1.5px solid #1a3a22"},
-  cardUrgent: {borderColor:"#5a2222",background:"#110808"},
+  empty:      {textAlign:"center",padding:40,color:"#5a5a6a",fontSize:15,fontStyle:"italic"},
+  card:       {background:"#333333",borderRadius:12,marginBottom:8,padding:"12px 10px",border:"1.5px solid #3e3e3e"},
+  cardUrgent: {borderColor:"#FFC1CC66",background:"#3a2a2e"},
   cardDone:   {opacity:0.35},
-  cardOverdue:{borderColor:"#5a4a10",background:"#141200"},
-  circle:     {width:24,height:24,borderRadius:"50%",border:"2px solid #1a4a22",background:"transparent",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1},
-  circleDone: {background:"#1a7a3a",borderColor:"#1a7a3a"},
-  cardTitle:  {fontSize:14,fontWeight:600,color:"#8ad8a8",lineHeight:1.35,marginBottom:5},
-  strikethru: {textDecoration:"line-through",color:"#1a4a22"},
-  recChip:    {marginLeft:7,fontSize:10,background:"#071a0e",color:"#2a7a4a",borderRadius:10,padding:"1px 7px",border:"1px solid #1a3a22"},
+  cardOverdue:{borderColor:"#c8a84066",background:"#2e2a1a"},
+  circle:     {width:24,height:24,borderRadius:"50%",border:"2px solid #4a4a5a",background:"transparent",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1},
+  circleDone: {background:"#A8DADC",borderColor:"#A8DADC"},
+  cardTitle:  {fontSize:14,fontWeight:600,color:"#E4E4E4",lineHeight:1.35,marginBottom:5},
+  strikethru: {textDecoration:"line-through",color:"#5a5a6a"},
+  recChip:    {marginLeft:7,fontSize:10,background:"#2a3a3a",color:"#A8DADC",borderRadius:10,padding:"1px 7px",border:"1px solid #A8DADC44"},
   cardMeta:   {display:"flex",flexWrap:"wrap",gap:4},
-  metaChip:   {fontSize:10,background:"#071a0e",borderRadius:10,padding:"2px 8px",color:"#2a6a3a",border:"1px solid #1a3a22"},
-  metaOverdue:{background:"#1a1200",color:"#b09020",borderColor:"#3a2a08"},
+  metaChip:   {fontSize:10,background:"#222222",borderRadius:10,padding:"2px 8px",color:"#8a8a9a",border:"1px solid #3e3e3e"},
+  metaOverdue:{background:"#2e2a1a",color:"#c8a840",borderColor:"#6a5a20"},
   metaTag:    {fontSize:10,borderRadius:10,padding:"2px 8px",fontWeight:600},
-  cardNotes:  {marginTop:8,fontSize:12,color:"#2a6a3a",lineHeight:1.55,background:"#071410",borderRadius:6,padding:"7px 9px",border:"1px solid #1a3a22"},
+  cardNotes:  {marginTop:8,fontSize:12,color:"#8a8a9a",lineHeight:1.55,background:"#222222",borderRadius:6,padding:"7px 9px",border:"1px solid #3e3e3e"},
   actBtn:     {background:"none",border:"none",cursor:"pointer",fontSize:13,padding:2,borderRadius:4},
-  deferRow:   {display:"flex",gap:6,alignItems:"center",marginTop:8,paddingTop:8,borderTop:"1px solid #1a3a22",flexWrap:"wrap"},
-  deferBtn:   {background:"#071a0e",border:"1px solid #1a3a22",borderRadius:14,padding:"4px 12px",fontSize:12,cursor:"pointer",color:"#2a7a4a"},
-  overlay:    {position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:200},
-  modal:      {background:"#0d1f14",borderRadius:"18px 18px 0 0",padding:"22px 18px 32px",width:"100%",maxWidth:720,maxHeight:"92vh",overflowY:"auto",border:"1px solid #1a3a22",borderBottom:"none"},
+  deferRow:   {display:"flex",gap:6,alignItems:"center",marginTop:8,paddingTop:8,borderTop:"1px solid #3e3e3e",flexWrap:"wrap"},
+  deferBtn:   {background:"#222222",border:"1px solid #3e3e3e",borderRadius:14,padding:"4px 12px",fontSize:12,cursor:"pointer",color:"#B39CD0"},
+  overlay:    {position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:200},
+  modal:      {background:"#2C2C2C",borderRadius:"18px 18px 0 0",padding:"22px 18px 32px",width:"100%",maxWidth:720,maxHeight:"92vh",overflowY:"auto",border:"1px solid #3e3e3e",borderBottom:"none"},
   modalHead:  {display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14},
-  modalTitle: {fontFamily:"'Lora',serif",fontSize:18,fontWeight:700,color:"#5ac878"},
-  closeBtn:   {background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#1a5a2a"},
-  input:      {width:"100%",padding:"10px 12px",borderRadius:8,border:"1.5px solid #1a3a22",fontSize:14,outline:"none",marginBottom:10,color:"#8ad8a8",background:"#071410",fontFamily:"'Nunito',sans-serif"},
+  modalTitle: {fontFamily:"'Lora',serif",fontSize:18,fontWeight:700,color:"#A8DADC"},
+  closeBtn:   {background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#5a5a6a"},
+  input:      {width:"100%",padding:"10px 12px",borderRadius:8,border:"1.5px solid #3e3e3e",fontSize:14,outline:"none",marginBottom:10,color:"#E4E4E4",background:"#222222",fontFamily:"'Nunito',sans-serif"},
   textarea:   {resize:"vertical"},
   checkRow:   {display:"flex",alignItems:"center",gap:8,marginBottom:12,cursor:"pointer"},
-  fieldLabel: {fontSize:11,fontWeight:700,color:"#1a6a3a",textTransform:"uppercase",letterSpacing:"0.6px",marginBottom:4},
-  recBtn:     {border:"1px solid #1a3a22",background:"#071410",borderRadius:16,padding:"5px 12px",fontSize:12,cursor:"pointer",color:"#2a6a3a"},
-  recActive:  {background:"#1a3a22",color:"#5ac878",borderColor:"#2a5a32"},
-  tagToggle:  {border:"1px solid #1a3a22",borderRadius:14,padding:"5px 11px",fontSize:12,cursor:"pointer",fontWeight:600},
-  customTagBtn:{background:"#1a3a22",color:"#5ac878",border:"none",borderRadius:8,padding:"0 14px",cursor:"pointer",fontWeight:700},
-  customChip: {display:"inline-flex",alignItems:"center",background:"#071a0e",color:"#3a9a5a",borderRadius:12,padding:"3px 10px",fontSize:12,margin:"2px 4px 2px 0",border:"1px solid #1a3a22"},
-  saveBtn:    {width:"100%",background:"linear-gradient(135deg,#1a3a22,#0d2a14)",color:"#5ac878",border:"1px solid #2a5a32",borderRadius:10,padding:14,fontSize:15,cursor:"pointer",fontWeight:700},
+  fieldLabel: {fontSize:11,fontWeight:700,color:"#B39CD0",textTransform:"uppercase",letterSpacing:"0.6px",marginBottom:4},
+  recBtn:     {border:"1px solid #3e3e3e",background:"#222222",borderRadius:16,padding:"5px 12px",fontSize:12,cursor:"pointer",color:"#8a8a9a"},
+  recActive:  {background:"#2a3a3a",color:"#A8DADC",borderColor:"#A8DADC66"},
+  tagToggle:  {border:"1px solid #3e3e3e",borderRadius:14,padding:"5px 11px",fontSize:12,cursor:"pointer",fontWeight:600},
+  customTagBtn:{background:"#2a3a3a",color:"#A8DADC",border:"none",borderRadius:8,padding:"0 14px",cursor:"pointer",fontWeight:700},
+  customChip: {display:"inline-flex",alignItems:"center",background:"#2a2230",color:"#B39CD0",borderRadius:12,padding:"3px 10px",fontSize:12,margin:"2px 4px 2px 0",border:"1px solid #4a3a5a"},
+  saveBtn:    {width:"100%",background:"linear-gradient(135deg,#2a3a3a,#1a2a2a)",color:"#A8DADC",border:"1px solid #A8DADC66",borderRadius:10,padding:14,fontSize:15,cursor:"pointer",fontWeight:700},
   shopGrid:   {display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8,marginBottom:4},
-  shopItem:   {background:"#071410",borderRadius:12,padding:"12px 10px",textAlign:"center",border:"1.5px solid #1a3a22"},
-  shopOwned:  {background:"#071a0e",borderColor:"#1a4a22"},
-  shopName:   {fontSize:13,fontWeight:700,color:"#7ad8a0",marginTop:4},
-  shopDesc:   {fontSize:11,color:"#1a5a2a",margin:"4px 0 6px",lineHeight:1.4},
+  shopItem:   {background:"#222222",borderRadius:12,padding:"12px 10px",textAlign:"center",border:"1.5px solid #3e3e3e"},
+  shopOwned:  {background:"#1e2a2a",borderColor:"#A8DADC44"},
+  shopName:   {fontSize:13,fontWeight:700,color:"#E4E4E4",marginTop:4},
+  shopDesc:   {fontSize:11,color:"#6a6a7a",margin:"4px 0 6px",lineHeight:1.4},
   shopCost:   {fontSize:12,fontWeight:700,marginBottom:6},
-  shopBuy:    {background:"#1a3a22",color:"#5ac878",border:"1px solid #2a5a32",borderRadius:14,padding:"5px 16px",fontSize:12,cursor:"pointer",fontWeight:700},
-  shopCant:   {background:"#0a1a0e",color:"#2a4a32",borderColor:"#1a2a1a",cursor:"default"},
-  shopDone:   {background:"#071a0e",color:"#1a6a32",borderColor:"#1a3a22",cursor:"default"},
+  shopBuy:    {background:"#2a3a3a",color:"#A8DADC",border:"1px solid #A8DADC66",borderRadius:14,padding:"5px 16px",fontSize:12,cursor:"pointer",fontWeight:700},
+  shopCant:   {background:"#1a1a1a",color:"#3a3a4a",borderColor:"#2a2a2a",cursor:"default"},
+  shopDone:   {background:"#1e2a2a",color:"#5a9a9c",borderColor:"#2a4a4a",cursor:"default"},
 };
