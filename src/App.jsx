@@ -955,7 +955,9 @@ function TaskCard({task,onToggle,onLetGo,onDefer,onToggleUrgent,onEdit,onSomeday
         transform:`translateX(${swipeX}px)`,
         transition:swiping?"none":"transform 0.3s ease",
         ...(task.priority&&task.priority!=="none"?{borderLeftColor:priority.color,borderLeftWidth:3}:{}),
-        ...(task.urgent?S.cardUrgent:{}),(isDone?S.cardDone:{}),(isOverdue?S.cardOverdue:{})}}
+          ...(task.urgent?S.cardUrgent:{}),
+          ...(isDone?S.cardDone:{}),
+          ...(isOverdue?S.cardOverdue:{})}}
         onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
       <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
         <button style={{...S.circle,...(isDone?S.circleDone:{})}} onClick={()=>onToggle(task.id)}>
