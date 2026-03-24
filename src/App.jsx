@@ -717,7 +717,7 @@ const S={
   modalHead:  {display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14},
   modalTitle: {fontFamily:"'Lora',serif",fontSize:18,fontWeight:700,color:"#A8DADC"},
   closeBtn:   {background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#5a5a6a"},
-  input:      {width:"100%",padding:"10px 12px",borderRadius:8,border:"1.5px solid #3e3e3e",fontSize:14,outline:"none",marginBottom:10,color:"#E4E4E4",background:"#222222",fontFamily:"'Nunito',sans-serif"},
+  input:      {width:"100%",padding:"10px 12px",borderRadius:8,border:"1.5px solid #3e3e3e",fontSize:16,outline:"none",marginBottom:10,color:"#E4E4E4",background:"#222222",fontFamily:"'Nunito',sans-serif"},
   textarea:   {resize:"vertical"},
   checkRow:   {display:"flex",alignItems:"center",gap:8,marginBottom:12,cursor:"pointer"},
   fieldLabel: {fontSize:11,fontWeight:700,color:"#B39CD0",textTransform:"uppercase",letterSpacing:"0.6px",marginBottom:4},
