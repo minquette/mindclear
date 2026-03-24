@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import * as chrono from "chrono-node";
 
 const PRESET_TAGS = ["Work","Home","Personal","Health","Finance","Shopping","Errands","Social","Urgent"];
 const DAYS_SHORT = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
@@ -339,9 +340,27 @@ export default function App(){
   const[dragOver,setDragOver]=useState(null);
   const[dragTask,setDragTask]=useState(null);
   const[showShop,setShowShop]=useState(false);
+  const[dateSuggestion,setDateSuggestion]=useState(null);
   const titleRef=useRef();
 
   const showToast=useCallback(msg=>setToast(msg),[]);
+
+  const parseDateFromTitle = useCallback((title) => {
+    if (!title || title.length < 4) { setDateSuggestion(null); return; }
+    try {
+      const results = chrono.parse(title, new Date(), { forwardDate: true });
+      if (results.length > 0) {
+        const parsed = results[0];
+        const date = parsed.start.date();
+        const iso = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+        // Strip the date text from the title
+        const cleanTitle = (title.slice(0, parsed.index) + title.slice(parsed.index + parsed.text.length)).trim().replace(/\s+/g,' ');
+        setDateSuggestion({ iso, display: fmtDate(iso), cleanTitle, originalText: parsed.text });
+      } else {
+        setDateSuggestion(null);
+      }
+    } catch(e) { setDateSuggestion(null); }
+  }, []);
 
   const earn=useCallback((pts,reason)=>{
     setStats(s=>{
@@ -369,13 +388,14 @@ export default function App(){
 
   useEffect(()=>{if(Notification.permission==="default")Notification.requestPermission();},[]);
 
-  const openNew=()=>{setForm(defaultTask());setEditId(null);setShowForm(true);setTimeout(()=>titleRef.current?.focus(),60);};
-  const openEdit=t=>{setForm({...t});setEditId(t.id);setShowForm(true);};
+  const openNew=()=>{setForm(defaultTask());setEditId(null);setDateSuggestion(null);setShowForm(true);setTimeout(()=>titleRef.current?.focus(),60);};
+  const openEdit=t=>{setForm({...t});setEditId(t.id);setDateSuggestion(null);setShowForm(true);};
   const saveTask=()=>{
     if(!form.title.trim())return;
     if(editId){setTasks(p=>p.map(t=>t.id===editId?{...form}:t));}
     else{setTasks(p=>[{...form,id:`t_${Date.now()}`},...p]);}
     setShowForm(false);
+    setDateSuggestion(null);
   };
 
   const toggleDone = (id, todayStr) => {
@@ -647,7 +667,21 @@ export default function App(){
               <button style={S.closeBtn} onClick={()=>setShowForm(false)}>✕</button>
             </div>
             <input ref={titleRef} style={S.input} placeholder="What needs to be done?" value={form.title}
-              onChange={e=>setForm(f=>({...f,title:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&saveTask()}/>
+              onChange={e=>{setForm(f=>({...f,title:e.target.value}));parseDateFromTitle(e.target.value);}}
+              onKeyDown={e=>e.key==="Enter"&&saveTask()}/>
+            {dateSuggestion&&!form.dueDate&&(
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,padding:"8px 12px",background:"#1a2a3a",borderRadius:8,border:"1px solid #A8DADC44"}}>
+                <span style={{fontSize:13,color:"#A8DADC",flex:1}}>📅 Set due date to {dateSuggestion.display}?</span>
+                <button style={{background:"#A8DADC",color:"#1a1a2a",border:"none",borderRadius:6,padding:"4px 10px",fontSize:12,fontWeight:700,cursor:"pointer"}}
+                  onClick={()=>{setForm(f=>({...f,dueDate:dateSuggestion.iso,title:dateSuggestion.cleanTitle}));setDateSuggestion(null);}}>
+                  Yes
+                </button>
+                <button style={{background:"none",border:"1px solid #3e3e3e",borderRadius:6,padding:"4px 10px",fontSize:12,color:"#6a6a7a",cursor:"pointer"}}
+                  onClick={()=>setDateSuggestion(null)}>
+                  No
+                </button>
+              </div>
+            )}
             <textarea style={{...S.input,...S.textarea}} placeholder="Notes, details, links..." rows={3}
               value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))}/>
             <label style={S.checkRow}>
