@@ -65,7 +65,7 @@ const BADGES = [
 const defaultTask = () => ({
   id:`t_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
   title:"",notes:"",urgent:false,dueDate:"",dueDay:"",dueDays:[],recurrence:"None",
-  tags:[],reminder:"",done:false,completedDates:[],stickerEmoji:"⭐",createdAt:new Date().toISOString(),
+  tags:[],reminder:"",done:false,completedDates:[],stickerEmoji:"⭐",showStickerChart:false,createdAt:new Date().toISOString(),
 });
 const defaultStats = () => ({
   points:0,totalPoints:0,totalLetGo:0,totalDumps:0,totalDeferred:0,
@@ -515,12 +515,12 @@ export default function App(){
         <div style={{padding:"12px 14px"}}>
           <div style={{fontFamily:"-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif",fontSize:20,fontWeight:700,color:"#A8DADC",marginBottom:4}}>Habit tracker</div>
           <div style={{fontSize:13,color:"#6a6a7a",marginBottom:16,fontStyle:"italic"}}>Your recurring tasks this month</div>
-          {tasks.filter(t=>t.recurrence!=="None"&&!t.done).length===0 && (
+          {tasks.filter(t=>t.recurrence!=="None"&&!t.done&&t.showStickerChart).length===0 && (
             <div style={{textAlign:"center",padding:40,color:"#5a5a6a",fontSize:15,fontStyle:"italic"}}>
-              No recurring tasks yet. Add one and set it to repeat!
+              No habit charts yet. Edit a recurring task and turn on "Track this habit" to add one.
             </div>
           )}
-          {tasks.filter(t=>t.recurrence!=="None"&&!t.done).map(t=>(
+          {tasks.filter(t=>t.recurrence!=="None"&&!t.done&&t.showStickerChart).map(t=>(
             <StickerChart key={t.id} task={t} compact={false}/>
           ))}
         </div>
@@ -624,21 +624,6 @@ export default function App(){
       )}
 
 
-      {view==="stats"&&(
-        <div style={{padding:"12px 14px"}}>
-          <div style={{fontFamily:"-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif",fontSize:20,fontWeight:700,color:"#A8DADC",marginBottom:4}}>Habit tracker</div>
-          <div style={{fontSize:13,color:"#6a6a7a",marginBottom:16,fontStyle:"italic"}}>Your recurring tasks this month</div>
-          {tasks.filter(t=>t.recurrence!=="None"&&!t.done).length===0 && (
-            <div style={{textAlign:"center",padding:40,color:"#5a5a6a",fontSize:15,fontStyle:"italic"}}>
-              No recurring tasks yet. Add one and set it to repeat!
-            </div>
-          )}
-          {tasks.filter(t=>t.recurrence!=="None"&&!t.done).map(t=>(
-            <StickerChart key={t.id} task={t} compact={false}/>
-          ))}
-        </div>
-      )}
-
       {["today","all","done"].includes(view)&&(
         <div style={S.list}>
           {filteredList.length===0&&(
@@ -686,15 +671,21 @@ export default function App(){
               ))}
             </div>
             {form.recurrence!=="None"&&<>
-              <div style={S.fieldLabel}>Sticker</div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
-                {STICKER_EMOJIS.map(e=>(
-                  <button key={e} onClick={()=>setForm(f=>({...f,stickerEmoji:e}))}
-                    style={{fontSize:20,background:form.stickerEmoji===e?"#2a3a3a":"transparent",border:form.stickerEmoji===e?"2px solid #A8DADC":"2px solid transparent",borderRadius:8,padding:"2px 4px",cursor:"pointer"}}>
-                    {e}
-                  </button>
-                ))}
-              </div>
+              <label style={{...S.checkRow,marginBottom:8}}>
+                <input type="checkbox" checked={form.showStickerChart||false} onChange={e=>setForm(f=>({...f,showStickerChart:e.target.checked}))}/>
+                <span style={{fontSize:14,fontWeight:600,color:form.showStickerChart?"#A8DADC":"#8a8a9a"}}>Track this habit with a sticker chart</span>
+              </label>
+              {form.showStickerChart&&<>
+                <div style={S.fieldLabel}>Sticker</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
+                  {STICKER_EMOJIS.map(e=>(
+                    <button key={e} onClick={()=>setForm(f=>({...f,stickerEmoji:e}))}
+                      style={{fontSize:20,background:form.stickerEmoji===e?"#2a3a3a":"transparent",border:form.stickerEmoji===e?"2px solid #A8DADC":"2px solid transparent",borderRadius:8,padding:"2px 4px",cursor:"pointer"}}>
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              </>}
             </>}
             <div style={S.fieldLabel}>Repeats</div>
             <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
@@ -802,7 +793,7 @@ function TaskCard({task,onToggle,onLetGo,onDefer,onToggleUrgent,onEdit,today,isT
             ))}
           </div>
           {expanded&&task.notes&&<div style={S.cardNotes}>{task.notes}</div>}
-          {expanded&&task.recurrence!=="None"&&<StickerChart task={task} compact={true}/>}
+          {expanded&&task.recurrence!=="None"&&task.showStickerChart&&<StickerChart task={task} compact={true}/>}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:2,flexShrink:0}}>
           <button style={S.actBtn} onClick={()=>onEdit(task)}>✏️</button>
