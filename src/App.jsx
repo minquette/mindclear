@@ -520,8 +520,7 @@ export default function App(){
     r.onerror = () => setListening(false);
     r.onresult = e => {
       const t = e.results[0][0].transcript;
-      setBrainText(prev => prev ? prev + "
-" + t : t);
+      setBrainText(prev => prev ? prev + "\n" + t : t);
     };
     r.start();
   };
