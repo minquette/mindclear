@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 const PRESET_TAGS = ["Work","Home","Personal","Health","Finance","Shopping","Errands","Social","Urgent"];
 const DAYS_SHORT = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const RECURRENCE = ["None","Daily","Weekly","Fortnightly","Monthly"];
+const STICKER_EMOJIS = ["⭐","🌟","✅","💜","🌸","🔥","🏆","🌈","💎","🦋","🌻","❤️","🍀","🎯","🧘","💪","🐝","🌙"];
 const TAG_COLORS = {
   Work:"#4a9e6a",Home:"#d4813a",Personal:"#9b6fce",Health:"#c05a5a",
   Finance:"#b09040",Shopping:"#4a8ab0",Errands:"#8a9a4a",Social:"#c06a9a",Urgent:"#d04040"
@@ -64,7 +65,7 @@ const BADGES = [
 const defaultTask = () => ({
   id:`t_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
   title:"",notes:"",urgent:false,dueDate:"",dueDay:"",dueDays:[],recurrence:"None",
-  tags:[],reminder:"",done:false,completedDates:[],createdAt:new Date().toISOString(),
+  tags:[],reminder:"",done:false,completedDates:[],stickerEmoji:"⭐",createdAt:new Date().toISOString(),
 });
 const defaultStats = () => ({
   points:0,totalPoints:0,totalLetGo:0,totalDumps:0,totalDeferred:0,
@@ -90,6 +91,116 @@ const weekDates=()=>{
   const dow=today.getDay()===0?6:today.getDay()-1;
   return Array.from({length:7},(_,i)=>{const d=new Date(today);d.setDate(d.getDate()-dow+i);return localISO(d);});
 };
+
+
+// ── Sticker Chart ─────────────────────────────────────────────────────────
+function StickerChart({ task, compact=false }) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const firstDow = new Date(year, month, 1).getDay(); // 0=Sun
+  // Convert to Mon-first: Sun=6, Mon=0...
+  const firstOffset = firstDow === 0 ? 6 : firstDow - 1;
+  const completed = task.completedDates || [];
+  const monthName = now.toLocaleString("en-AU",{month:"long"});
+
+  // Build grid: blanks + days
+  const cells = [];
+  for (let i=0; i<firstOffset; i++) cells.push(null);
+  for (let d=1; d<=daysInMonth; d++) {
+    const iso = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    cells.push({ d, iso, done: completed.includes(iso) });
+  }
+  // Pad to complete final week
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const total = completed.filter(d=>d.startsWith(`${year}-${String(month+1).padStart(2,"0")}`)).length;
+  const streak = calcStreak(completed);
+
+  if (compact) {
+    // Mini inline version — just show this month's dots in a single row wrap
+    return (
+      <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid #3e3e3e"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <span style={{fontSize:12,color:"#B39CD0",fontWeight:700}}>{monthName}</span>
+          <span style={{fontSize:11,color:"#6a6a7a"}}>{total} this month · {streak} day streak</span>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}}>
+          {["M","T","W","T","F","S","S"].map((d,i)=>(
+            <div key={i} style={{fontSize:9,color:"#4a4a5a",textAlign:"center",paddingBottom:2}}>{d}</div>
+          ))}
+          {cells.map((cell,i)=>(
+            <div key={i} style={{
+              height:20,display:"flex",alignItems:"center",justifyContent:"center",
+              borderRadius:4,background:cell?.done?"transparent":"none",fontSize:cell?.done?14:10,
+              color:cell?.done?"inherit":"#2a2a3a",
+            }}>
+              {cell ? (cell.done ? task.stickerEmoji||"⭐" : <span style={{fontSize:8,color:"#2a2a3a"}}>·</span>) : ""}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Full version for stats tab
+  return (
+    <div style={{background:"#222222",borderRadius:12,padding:"14px 12px",marginBottom:12,border:"1px solid #3e3e3e"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+        <div>
+          <div style={{fontSize:15,fontWeight:700,color:"#E4E4E4",marginBottom:2}}>{task.title}</div>
+          <div style={{fontSize:12,color:"#6a6a7a"}}>↻ {task.recurrence}</div>
+        </div>
+        <div style={{textAlign:"right"}}>
+          <div style={{fontSize:20}}>{task.stickerEmoji||"⭐"}</div>
+          <div style={{fontSize:11,color:"#B39CD0",fontWeight:700,marginTop:2}}>{streak} day streak</div>
+        </div>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+        <span style={{fontSize:12,color:"#A8DADC",fontWeight:700}}>{monthName} {year}</span>
+        <span style={{fontSize:12,color:"#6a6a7a"}}>{total}/{daysInMonth} days</span>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
+        {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((d,i)=>(
+          <div key={i} style={{fontSize:9,color:"#4a4a5a",textAlign:"center",paddingBottom:3,fontWeight:700}}>{d}</div>
+        ))}
+        {cells.map((cell,i)=>(
+          <div key={i} style={{
+            height:28,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+            borderRadius:6,
+            background:cell===null?"transparent":cell.done?"#1a3a2a":"#1a1a22",
+            border:cell===null?"none":`1px solid ${cell.done?"#2a5a3a":"#2a2a3a"}`,
+            position:"relative",
+          }}>
+            {cell && (
+              <>
+                <span style={{fontSize:cell.done?14:9,lineHeight:1}}>
+                  {cell.done ? (task.stickerEmoji||"⭐") : <span style={{color:"#2a2a3a"}}>{cell.d}</span>}
+                </span>
+                {!cell.done && <span style={{fontSize:8,color:"#3a3a4a",position:"absolute",bottom:1}}>{cell.d}</span>}
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function calcStreak(completedDates) {
+  if (!completedDates || completedDates.length === 0) return 0;
+  const sorted = [...completedDates].sort().reverse();
+  const todayStr = (() => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
+  let streak = 0;
+  let check = new Date(todayStr);
+  for (let i=0; i<365; i++) {
+    const iso = `${check.getFullYear()}-${String(check.getMonth()+1).padStart(2,"0")}-${String(check.getDate()).padStart(2,"0")}`;
+    if (completedDates.includes(iso)) { streak++; check.setDate(check.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
 
 function Cottage({owned}){
   const has=id=>owned.includes(id);
@@ -382,6 +493,7 @@ export default function App(){
             {id:"brain", label:"🧠 Dump"},
             {id:"cottage",label:"🏡 Home"},
             {id:"done",  label:"Done"},
+            {id:"stats", label:"📊 Habits"},
           ].map(v=>(
             <button key={v.id} style={{...S.navBtn,...(view===v.id?S.navActive:{})}} onClick={()=>setView(v.id)}>{v.label}</button>
           ))}
@@ -394,6 +506,22 @@ export default function App(){
           {PRESET_TAGS.map(tag=>(
             <button key={tag} style={{...S.tagPill,background:filterTag===tag?getTagColor(tag)+"33":"transparent",color:filterTag===tag?getTagColor(tag):"#6a6a7a",border:filterTag===tag?`1px solid ${getTagColor(tag)}`:"1px solid #3e3e3e"}}
               onClick={()=>setFilterTag(filterTag===tag?null:tag)}>{tag}</button>
+          ))}
+        </div>
+      )}
+
+
+      {view==="stats"&&(
+        <div style={{padding:"12px 14px"}}>
+          <div style={{fontFamily:"-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif",fontSize:20,fontWeight:700,color:"#A8DADC",marginBottom:4}}>Habit tracker</div>
+          <div style={{fontSize:13,color:"#6a6a7a",marginBottom:16,fontStyle:"italic"}}>Your recurring tasks this month</div>
+          {tasks.filter(t=>t.recurrence!=="None"&&!t.done).length===0 && (
+            <div style={{textAlign:"center",padding:40,color:"#5a5a6a",fontSize:15,fontStyle:"italic"}}>
+              No recurring tasks yet. Add one and set it to repeat!
+            </div>
+          )}
+          {tasks.filter(t=>t.recurrence!=="None"&&!t.done).map(t=>(
+            <StickerChart key={t.id} task={t} compact={false}/>
           ))}
         </div>
       )}
@@ -495,6 +623,22 @@ export default function App(){
         </div>
       )}
 
+
+      {view==="stats"&&(
+        <div style={{padding:"12px 14px"}}>
+          <div style={{fontFamily:"-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif",fontSize:20,fontWeight:700,color:"#A8DADC",marginBottom:4}}>Habit tracker</div>
+          <div style={{fontSize:13,color:"#6a6a7a",marginBottom:16,fontStyle:"italic"}}>Your recurring tasks this month</div>
+          {tasks.filter(t=>t.recurrence!=="None"&&!t.done).length===0 && (
+            <div style={{textAlign:"center",padding:40,color:"#5a5a6a",fontSize:15,fontStyle:"italic"}}>
+              No recurring tasks yet. Add one and set it to repeat!
+            </div>
+          )}
+          {tasks.filter(t=>t.recurrence!=="None"&&!t.done).map(t=>(
+            <StickerChart key={t.id} task={t} compact={false}/>
+          ))}
+        </div>
+      )}
+
       {["today","all","done"].includes(view)&&(
         <div style={S.list}>
           {filteredList.length===0&&(
@@ -541,6 +685,17 @@ export default function App(){
                 </button>
               ))}
             </div>
+            {form.recurrence!=="None"&&<>
+              <div style={S.fieldLabel}>Sticker</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
+                {STICKER_EMOJIS.map(e=>(
+                  <button key={e} onClick={()=>setForm(f=>({...f,stickerEmoji:e}))}
+                    style={{fontSize:20,background:form.stickerEmoji===e?"#2a3a3a":"transparent",border:form.stickerEmoji===e?"2px solid #A8DADC":"2px solid transparent",borderRadius:8,padding:"2px 4px",cursor:"pointer"}}>
+                    {e}
+                  </button>
+                ))}
+              </div>
+            </>}
             <div style={S.fieldLabel}>Repeats</div>
             <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
               {RECURRENCE.map(r=><button key={r} style={{...S.recBtn,...(form.recurrence===r?S.recActive:{})}} onClick={()=>setForm(f=>({...f,recurrence:r}))}>{r}</button>)}
@@ -647,6 +802,7 @@ function TaskCard({task,onToggle,onLetGo,onDefer,onToggleUrgent,onEdit,today,isT
             ))}
           </div>
           {expanded&&task.notes&&<div style={S.cardNotes}>{task.notes}</div>}
+          {expanded&&task.recurrence!=="None"&&<StickerChart task={task} compact={true}/>}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:2,flexShrink:0}}>
           <button style={S.actBtn} onClick={()=>onEdit(task)}>✏️</button>
